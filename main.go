@@ -97,9 +97,8 @@ func main() {
 		Usage: "working with secrets is my thing",
 		Commands: []*cli.Command{
 			{
-				Name:    "readall",
-				Aliases: []string{"ra"},
-				Usage:   "reads all secrets producing outputs according to manifest",
+				Name:  "export",
+				Usage: "exports all secrets according to manifest",
 				Action: func(c *cli.Context) error {
 					fmt.Println("reading all")
 
