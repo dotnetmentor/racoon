@@ -6,7 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+
+	"github.com/urfave/cli/v2"
 	yaml2 "gopkg.in/yaml.v2"
 )
 
@@ -86,15 +91,92 @@ func main() {
 
 	// validate manifest config
 
-	// debug print
-	debugFormatJSON("manifest", m)
+	// run commands using manifest
+	app := &cli.App{
+		Name:  "racoon",
+		Usage: "working with secrets is my thing",
+		Commands: []*cli.Command{
+			{
+				Name:    "readall",
+				Aliases: []string{"ra"},
+				Usage:   "reads all secrets producing outputs according to manifest",
+				Action: func(c *cli.Context) error {
+					fmt.Println("reading all")
+
+					if awsRegion := stringEnvVar("AWS_REGION", ""); awsRegion == "" {
+						return fmt.Errorf("required environment variable AWS_REGION has no value set")
+					}
+
+					awsConfig, err := config.LoadDefaultConfig(c.Context)
+					if err != nil {
+						return err
+					}
+
+					ssmClient := ssm.NewFromConfig(awsConfig)
+
+					// read from param store
+					values := map[string]string{}
+					for _, s := range m.Secrets {
+						fmt.Println("reading", s.Name)
+						out, err := ssmClient.GetParameter(c.Context, &ssm.GetParameterInput{
+							Name:           &s.ValueFrom.AwsParameterStore.Key,
+							WithDecryption: true,
+						})
+						if err != nil {
+							return err
+						}
+						values[s.Name] = *out.Parameter.Value
+					}
+
+					// create outputs
+					for _, o := range m.Outputs {
+						switch o.Type {
+						case OutputTypeDotenv:
+							// TODO: Use convention for converting name to expected dotenv format
+							var b strings.Builder
+							for _, s := range m.Secrets {
+								fmt.Fprintf(&b, "%s=\"%s\"\n", s.Name, values[s.Name])
+							}
+							ioutil.WriteFile(o.Path, []byte(b.String()), 0600)
+							break
+						default:
+							panic(fmt.Errorf("unsupported output type %s", o.Type))
+						}
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:  "debug",
+				Usage: "prints debug output",
+				Action: func(c *cli.Context) error {
+					debugFormatJSON("manifest", m)
+					return nil
+				},
+			},
+		},
+	}
+
+	err = app.Run(os.Args)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func debugFormatJSON(header string, i interface{}) {
 	b, err := json.MarshalIndent(i, "", "\t")
 	if err != nil {
-		fmt.Printf("JSON Error: %s", err.Error())
+		fmt.Printf("JSON Error: %s\n", err.Error())
 		return
 	}
-	fmt.Printf("%s: %s", header, string(b))
+	fmt.Printf("%s: %s\n", header, string(b))
+}
+
+func stringEnvVar(key, defaultValue string) string {
+	v := os.Getenv(key)
+	if v != "" {
+		return v
+	}
+	return defaultValue
 }
