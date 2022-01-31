@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 
+	"github.com/fatih/camelcase"
 	"github.com/urfave/cli/v2"
 	yaml2 "gopkg.in/yaml.v2"
 )
@@ -41,13 +42,14 @@ type AwsParameterStoreConfig struct {
 }
 
 type SecretConfig struct {
-	Name        string    `yaml:"name"`
-	Description string    `yaml:"description"`
-	ValueFrom   ValueFrom `yaml:"valueFrom"`
+	Name        string     `yaml:"name"`
+	Description string     `yaml:"description"`
+	Default     *string    `yaml:"default,omitempty"`
+	ValueFrom   *ValueFrom `yaml:"valueFrom,omitempty"`
 }
 
 type ValueFrom struct {
-	AwsParameterStore ValueFromAwsParameterStoreConfig `yaml:"awsParameterStore,omitempty"`
+	AwsParameterStore *ValueFromAwsParameterStoreConfig `yaml:"awsParameterStore,omitempty"`
 }
 
 type ValueFromAwsParameterStoreConfig struct {
@@ -100,8 +102,6 @@ func main() {
 				Name:  "export",
 				Usage: "exports all secrets according to manifest",
 				Action: func(c *cli.Context) error {
-					fmt.Println("reading all")
-
 					if awsRegion := stringEnvVar("AWS_REGION", ""); awsRegion == "" {
 						return fmt.Errorf("required environment variable AWS_REGION has no value set")
 					}
@@ -116,25 +116,40 @@ func main() {
 					// read from param store
 					values := map[string]string{}
 					for _, s := range m.Secrets {
-						fmt.Println("reading", s.Name)
-						out, err := ssmClient.GetParameter(c.Context, &ssm.GetParameterInput{
-							Name:           &s.ValueFrom.AwsParameterStore.Key,
-							WithDecryption: true,
-						})
-						if err != nil {
-							return err
+						if s.Default != nil {
+							fmt.Println("reading", s.Name, "from", "default")
+							values[s.Name] = *s.Default
 						}
-						values[s.Name] = *out.Parameter.Value
+
+						if s.ValueFrom != nil {
+							if s.ValueFrom.AwsParameterStore != nil {
+								fmt.Println("reading", s.Name, "from", "awsParameterStore")
+								out, err := ssmClient.GetParameter(c.Context, &ssm.GetParameterInput{
+									Name:           &s.ValueFrom.AwsParameterStore.Key,
+									WithDecryption: true,
+								})
+								if err != nil {
+									return err
+								}
+								values[s.Name] = *out.Parameter.Value
+							}
+						}
 					}
 
 					// create outputs
 					for _, o := range m.Outputs {
 						switch o.Type {
 						case OutputTypeDotenv:
-							// TODO: Use convention for converting name to expected dotenv format
+							fmt.Println("exporting secrets in dotenv format")
 							var b strings.Builder
 							for _, s := range m.Secrets {
-								fmt.Fprintf(&b, "%s=\"%s\"\n", s.Name, values[s.Name])
+								parts := camelcase.Split(s.Name)
+								for i, part := range parts {
+									parts[i] = strings.ToUpper(part)
+								}
+								key := strings.Join(parts, "_")
+								value := strings.TrimSuffix(values[s.Name], "\n")
+								fmt.Fprintf(&b, "%s=\"%s\"\n", key, value)
 							}
 							ioutil.WriteFile(o.Path, []byte(b.String()), 0600)
 							break
