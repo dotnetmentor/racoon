@@ -14,7 +14,7 @@ func main() {
 	// configure cli app
 	app := &cli.App{
 		Name:  "racoon",
-		Usage: "working with secrets is my thing",
+		Usage: "secrets are my thing",
 		Commands: []*cli.Command{
 			command.Export(ctx),
 			command.Create(ctx),

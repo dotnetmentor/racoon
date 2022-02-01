@@ -33,6 +33,8 @@ See `racoon help` or ` racoon --help` for all available commands
 - [ ] Command for local cleanup of generated files
 - [ ] Store provider for AWS Secrets Manager : Secrets
 - [ ] Store provider for Azure Key Vault : Secrets
+- [ ] Flag for specifying other filenames for secrets.y\*ml
+- [ ] Logging for export command (unless output path is stdout "-")
 
 ## Development
 
