@@ -3,6 +3,7 @@ package command
 import (
 	"bufio"
 	"errors"
+  "github.com/ttacon/chalk"
 	"fmt"
 	"os"
   "strings"
@@ -40,7 +41,7 @@ func Create(ctx config.AppContext) *cli.Command {
 						if err != nil {
 							var notFound *types.ParameterNotFound
 							if errors.As(err, &notFound) {
-							  fmt.Printf("Enter value for parameter %s? ", s.Name)
+							  fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
 								reader := bufio.NewReader(os.Stdin)
 								value, _ := reader.ReadString('\n')
                 value = strings.TrimSuffix(value, "\n")

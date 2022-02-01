@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.20.0
 	github.com/fatih/camelcase v1.0.0
 	github.com/sirupsen/logrus v1.8.1
+	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/urfave/cli/v2 v2.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
