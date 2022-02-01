@@ -1,2 +1,4 @@
-.env
+output/.env
+output/*.tfvars
 secrets.y*ml
+dist/
