@@ -16,8 +16,9 @@ func main() {
 		Name:  "racoon",
 		Usage: "secrets are my thing",
 		Commands: []*cli.Command{
-			command.Export(ctx),
 			command.Create(ctx),
+			command.Export(ctx),
+			command.Read(ctx),
 		},
 	}
 
