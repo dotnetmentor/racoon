@@ -41,7 +41,7 @@ func Export(ctx config.AppContext) *cli.Command {
 
 				if s.ValueFrom != nil {
 					if s.ValueFrom.AwsParameterStore != nil {
-						ctx.Log.Debugf("reading %s from %s", s.Name, "awsParameterStore")
+						ctx.Log.Debugf("reading %s from %s", s.Name, config.StoreTypeAwsParameterStore)
 						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
 							Name:           &s.ValueFrom.AwsParameterStore.Key,
 							WithDecryption: true,
