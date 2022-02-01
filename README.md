@@ -19,7 +19,7 @@ See `racoon help` or ` racoon --help` for all available commands
 - [x] Seeding of secrets not already in the store
 - [ ] Release pipeline
 - [ ] Export outputs to stdout (no logging allowed)
-- [ ] Reading a single secret
+- [x] Command for reading a single secrets value
 - [ ] Tagging of external resources
 - [ ] Context support (dev / production / cicd / localdev etc)
 - [ ] Key format for Parameter Store
