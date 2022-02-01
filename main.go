@@ -17,6 +17,7 @@ func main() {
 		Usage: "working with secrets is my thing",
 		Commands: []*cli.Command{
 			command.Export(ctx),
+			command.Create(ctx),
 		},
 	}
 

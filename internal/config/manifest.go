@@ -12,6 +12,8 @@ import (
 const (
 	OutputTypeDotenv OutputType = "dotenv"
 	OutputTypeTfvars OutputType = "tfvars"
+
+	StoreTypeAwsParameterStore string = "awsParameterStore"
 )
 
 func NewManifest(paths []string) Manifest {
