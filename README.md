@@ -35,7 +35,8 @@ See `racoon help` or ` racoon --help` for all available commands
 - [ ] Store provider for AWS Secrets Manager : Secrets
 - [ ] Store provider for Azure Key Vault : Secrets
 - [ ] Flag for specifying other filenames for secrets.y\*ml
-- [ ] Logging for export command (unless output path is stdout "-")
+- [ ] Readonly secrets (used for consuming secret managed by external system)
+- [ ] Move command for moving secrets in the store
 
 ## Development
 
