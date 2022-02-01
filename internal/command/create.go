@@ -1,7 +1,11 @@
 package command
 
 import (
+	"bufio"
 	"errors"
+	"fmt"
+	"os"
+  "strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -36,8 +40,16 @@ func Create(ctx config.AppContext) *cli.Command {
 						if err != nil {
 							var notFound *types.ParameterNotFound
 							if errors.As(err, &notFound) {
-								ctx.Log.Infof("TODO create this parameter")
-								continue
+							  fmt.Printf("Enter value for parameter %s? ", s.Name)
+								reader := bufio.NewReader(os.Stdin)
+								value, _ := reader.ReadString('\n')
+                value = strings.TrimSuffix(value, "\n")
+                if len(value) > 0 {
+									ctx.Log.Infof("TODO create this parameter with value [%s]", value)
+									continue
+								} else {
+                  return fmt.Errorf("missing value")
+                }
 							} else {
 								ctx.Log.Errorf("failed to get parameter %s, %v", s.ValueFrom.AwsParameterStore.Key, err)
 								return err
