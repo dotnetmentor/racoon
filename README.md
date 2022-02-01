@@ -15,7 +15,8 @@ See `racoon help` or ` racoon --help` for all available commands
 
 ## Roadmap
 
-- [ ] Seeding of secrets not already in the store
+- [x] Exporting of secrets to multiple outputs (dotenv, tfvars)
+- [x] Seeding of secrets not already in the store
 - [ ] Release pipeline
 - [ ] Export outputs to stdout (no logging allowed)
 - [ ] Reading a single secret
