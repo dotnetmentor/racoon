@@ -35,13 +35,13 @@ func Export(ctx config.AppContext) *cli.Command {
 			values := map[string]string{}
 			for _, s := range m.Secrets {
 				if s.Default != nil {
-					ctx.Log.Debugf("reading %s from %s", s.Name, "default")
+					ctx.Log.Infof("reading %s from %s", s.Name, "default")
 					values[s.Name] = *s.Default
 				}
 
 				if s.ValueFrom != nil {
 					if s.ValueFrom.AwsParameterStore != nil {
-						ctx.Log.Debugf("reading %s from %s", s.Name, config.StoreTypeAwsParameterStore)
+						ctx.Log.Infof("reading %s from %s", s.Name, config.StoreTypeAwsParameterStore)
 						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
 							Name:           &s.ValueFrom.AwsParameterStore.Key,
 							WithDecryption: true,
@@ -64,12 +64,12 @@ func Export(ctx config.AppContext) *cli.Command {
 				var out string
 				switch o.Type {
 				case config.OutputTypeDotenv:
-					ctx.Log.Debugf("exporting secrets as dotenv (%s)", o.Path)
+					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", o.Path)
 					out = output.Dotenv(m, values)
 					ioutil.WriteFile(o.Path, []byte(out), 0600)
 					break
 				case config.OutputTypeTfvars:
-					ctx.Log.Debugf("exporting secrets as tfvars (%s)", o.Path)
+					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", o.Path)
 					out = output.Tfvars(m, values)
 					ioutil.WriteFile(o.Path, []byte(out), 0600)
 					break
