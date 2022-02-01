@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -ueo pipefail
+
+function lint-sh {
+  local file="${1:?'missing file'}"
+  if ! command -v docker &>/dev/null; then
+    if command -v shfmt &>/dev/null; then
+      shfmt -l -i 2 -w "${file:?}"
+      exit 0
+    else
+      exit 0
+    fi
+  fi
+
+  if [[ -n "${files:-}" ]]; then
+    docker run \
+      --rm \
+      -i \
+      -v "$(pwd)":/work \
+      -w /work \
+      mvdan/shfmt:v3.4.2-alpine \
+      sh -c "shfmt -l -i 2 -w ${file:?}"
+  fi
+}
+
+for file in $(git diff --name-only --cached);
+do
+  case "${file:?}" in
+    *go)
+      go fmt "${file:?}"
+      ;;
+    *md | *y*ml)
+      npx prettier --write "${file:?}"
+      ;;
+    *sh)
+      lint-sh "${file:?}"
+      ;;
+  esac
+done

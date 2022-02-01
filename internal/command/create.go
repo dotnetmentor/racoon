@@ -3,10 +3,10 @@ package command
 import (
 	"bufio"
 	"errors"
-  "github.com/ttacon/chalk"
 	"fmt"
+	"github.com/ttacon/chalk"
 	"os"
-  "strings"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -41,16 +41,16 @@ func Create(ctx config.AppContext) *cli.Command {
 						if err != nil {
 							var notFound *types.ParameterNotFound
 							if errors.As(err, &notFound) {
-							  fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
+								fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
 								reader := bufio.NewReader(os.Stdin)
 								value, _ := reader.ReadString('\n')
-                value = strings.TrimSuffix(value, "\n")
-                if len(value) > 0 {
+								value = strings.TrimSuffix(value, "\n")
+								if len(value) > 0 {
 									ctx.Log.Infof("TODO create this parameter with value [%s]", value)
 									continue
 								} else {
-                  return fmt.Errorf("missing value")
-                }
+									return fmt.Errorf("missing value")
+								}
 							} else {
 								ctx.Log.Errorf("failed to get parameter %s, %v", s.ValueFrom.AwsParameterStore.Key, err)
 								return err
