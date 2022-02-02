@@ -53,6 +53,7 @@ func Read(ctx config.AppContext) *cli.Command {
 					}
 
 					fmt.Printf("%s", value)
+					return nil
 				}
 			}
 
