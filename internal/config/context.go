@@ -1,6 +1,8 @@
 package config
 
-import "github.com/sirupsen/logrus"
+import (
+	"github.com/sirupsen/logrus"
+)
 
 var (
 	DefaultManifestYamlFiles []string = []string{
