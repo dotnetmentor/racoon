@@ -24,10 +24,12 @@ func Export(ctx config.AppContext) *cli.Command {
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
+				Usage:   "export a single output",
 			},
 			&cli.StringFlag{
 				Name:    "path",
 				Aliases: []string{"p"},
+				Usage:   "export a single output to the specified path",
 			},
 		},
 		Action: func(c *cli.Context) error {
