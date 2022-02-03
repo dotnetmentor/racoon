@@ -1,8 +1,9 @@
 package command
 
 import (
+	"bufio"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 
@@ -23,9 +24,22 @@ func Export(ctx config.AppContext) *cli.Command {
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
+				Usage:   "export a single output",
+			},
+			&cli.StringFlag{
+				Name:    "path",
+				Aliases: []string{"p"},
+				Usage:   "export a single output to the specified path",
 			},
 		},
 		Action: func(c *cli.Context) error {
+			ot := c.String("output")
+			p := c.String("path")
+			if ot == "" && p != "" {
+				ctx.Log.Warn("the flag --path is not allowed without also specifying the --output flag")
+				return nil
+			}
+
 			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
 			if err != nil {
 				return err
@@ -56,22 +70,39 @@ func Export(ctx config.AppContext) *cli.Command {
 
 			// create outputs
 			for _, o := range m.Outputs {
-				ot := c.String("output")
 				if ot != "" && string(o.Type) != ot {
 					continue
 				}
 
-				var out string
+				path := o.Path
+				if p != "" {
+					path = p
+				}
+
+				if ot == "" && path == "-" {
+					ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s", o.Type)
+					continue
+				}
+
+				file := os.Stdout
+				if path != "-" {
+					if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+						return fmt.Errorf("failed to open file for writing, %v", err)
+					}
+					defer file.Close()
+					defer file.Sync()
+				}
+				w := bufio.NewWriter(file)
+				defer w.Flush()
+
 				switch o.Type {
 				case config.OutputTypeDotenv:
-					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", o.Path)
-					out = output.Dotenv(m, values)
-					ioutil.WriteFile(o.Path, []byte(out), 0600)
+					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", path)
+					output.Dotenv(w, m, values)
 					break
 				case config.OutputTypeTfvars:
-					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", o.Path)
-					out = output.Tfvars(m, values)
-					ioutil.WriteFile(o.Path, []byte(out), 0600)
+					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
+					output.Tfvars(w, m, values)
 					break
 				default:
 					panic(fmt.Errorf("unsupported output type %s", o.Type))

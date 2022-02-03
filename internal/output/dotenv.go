@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/dotnetmentor/racoon/internal/config"
@@ -9,8 +10,7 @@ import (
 	"github.com/fatih/camelcase"
 )
 
-func Dotenv(m config.Manifest, values map[string]string) string {
-	var b strings.Builder
+func Dotenv(w io.Writer, m config.Manifest, values map[string]string) {
 	for _, s := range m.Secrets {
 		parts := camelcase.Split(s.Name)
 		for i, part := range parts {
@@ -18,7 +18,6 @@ func Dotenv(m config.Manifest, values map[string]string) string {
 		}
 		key := strings.Join(parts, "_")
 		value := strings.TrimSuffix(values[s.Name], "\n")
-		fmt.Fprintf(&b, "%s=\"%s\"\n", key, value)
+		w.Write([]byte(fmt.Sprintf("%s=\"%s\"\n", key, value)))
 	}
-	return b.String()
 }

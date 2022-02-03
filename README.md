@@ -18,7 +18,7 @@ See `racoon help` or ` racoon --help` for all available commands
 - [x] Exporting of secrets to multiple outputs (dotenv, tfvars)
 - [x] Seeding of secrets not already in the store
 - [ ] Release pipeline
-- [ ] Export outputs to stdout (no logging allowed)
+- [x] Export outputs to stdout (no logging allowed)
 - [x] Command for reading a single secrets value
 - [ ] Tagging of external resources
 - [ ] Context support (dev / production / cicd / localdev etc)
