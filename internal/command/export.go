@@ -25,8 +25,19 @@ func Export(ctx config.AppContext) *cli.Command {
 				Name:    "output",
 				Aliases: []string{"o"},
 			},
+			&cli.StringFlag{
+				Name:    "path",
+				Aliases: []string{"p"},
+			},
 		},
 		Action: func(c *cli.Context) error {
+			ot := c.String("output")
+			p := c.String("path")
+			if ot == "" && p != "" {
+				ctx.Log.Warn("the flag --path is not allowed without also specifying the --output flag")
+				return nil
+			}
+
 			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
 			if err != nil {
 				return err
@@ -57,19 +68,23 @@ func Export(ctx config.AppContext) *cli.Command {
 
 			// create outputs
 			for _, o := range m.Outputs {
-				ot := c.String("output")
 				if ot != "" && string(o.Type) != ot {
 					continue
 				}
 
-				if ot == "" && o.Path == "-" {
+				path := o.Path
+				if p != "" {
+					path = p
+				}
+
+				if ot == "" && path == "-" {
 					ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s", o.Type)
 					continue
 				}
 
 				file := os.Stdout
-				if o.Path != "-" {
-					if file, err = os.OpenFile(o.Path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+				if path != "-" {
+					if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 						return fmt.Errorf("failed to open file for writing, %v", err)
 					}
 					defer file.Close()
@@ -80,11 +95,11 @@ func Export(ctx config.AppContext) *cli.Command {
 
 				switch o.Type {
 				case config.OutputTypeDotenv:
-					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", o.Path)
+					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", path)
 					output.Dotenv(w, m, values)
 					break
 				case config.OutputTypeTfvars:
-					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", o.Path)
+					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
 					output.Tfvars(w, m, values)
 					break
 				default:
