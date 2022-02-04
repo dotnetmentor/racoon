@@ -13,6 +13,17 @@ See `racoon help` or ` racoon --help` for all available commands
 - dotenv
 - Terraform tfvars
 
+## Examples
+
+```bash
+racoon create                                   # ensures secrets missing in the remote store are created by prompting the user for input
+racoon read MongodbConnection                   # reads a single secret from the remote store and writes it's value to stdout
+racoon export                                   # exports all secrets using the outputs defines in the manifest file
+racoon export --output direnv                   # exports all secrets using the direnv output defined in the manifest file
+racoon export --output direnv --path dot.env    # exports all secrets using the direnv output to the specified path
+racoon export -o direnv -p -                    # exports all secrets using the direnv output, writing the result to stdout
+```
+
 ## Roadmap
 
 - [x] Exporting of secrets to multiple outputs (dotenv, tfvars)
