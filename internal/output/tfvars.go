@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/dotnetmentor/racoon/internal/config"
 )
 
-func Tfvars(w io.Writer, m config.Manifest, keys map[string]string, values map[string]string) {
-	for _, s := range m.Secrets {
+func Tfvars(w io.Writer, secrets []string, remap map[string]string, values map[string]string) {
+	for _, s := range secrets {
 		var key string
-		if remapped, ok := keys[s.Name]; ok && remapped != "" {
+		if remapped, ok := remap[s]; ok && remapped != "" {
 			key = remapped
 		} else {
-			key = CamelCaseSplitToLowerJoinByUnderscore(s.Name)
+			key = CamelCaseSplitToLowerJoinByUnderscore(s)
 		}
 
-		value := strings.TrimSuffix(values[s.Name], "\n")
+		value := strings.TrimSuffix(values[s], "\n")
 		w.Write([]byte(fmt.Sprintf("%s = \"%s\"\n", key, value)))
 	}
 }

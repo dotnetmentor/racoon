@@ -10,6 +10,7 @@ import (
 	"github.com/dotnetmentor/racoon/internal/aws"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/output"
+	"github.com/dotnetmentor/racoon/internal/utils"
 
 	"github.com/urfave/cli/v2"
 )
@@ -31,6 +32,11 @@ func Export(ctx config.AppContext) *cli.Command {
 				Aliases: []string{"p"},
 				Usage:   "export a single output to the specified path",
 			},
+			&cli.StringSliceFlag{
+				Name:    "select",
+				Aliases: []string{"s"},
+				Usage:   "export selected secret",
+			},
 		},
 		Action: func(c *cli.Context) error {
 			ot := c.String("output")
@@ -45,9 +51,17 @@ func Export(ctx config.AppContext) *cli.Command {
 				return err
 			}
 
+			selection := c.StringSlice("select")
+
 			// read from store
+			secrets := []string{}
 			values := map[string]string{}
 			for _, s := range m.Secrets {
+				if len(selection) > 0 && !utils.StringSliceContains(selection, s.Name) {
+					continue
+				}
+				secrets = append(secrets, s.Name)
+
 				if s.Default != nil {
 					ctx.Log.Infof("reading %s from %s", s.Name, "default")
 					values[s.Name] = *s.Default
@@ -98,15 +112,15 @@ func Export(ctx config.AppContext) *cli.Command {
 				switch o.Type {
 				case config.OutputTypeDotenv:
 					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", path)
-					output.Dotenv(w, m, o.Map, values)
+					output.Dotenv(w, secrets, o.Map, values)
 					break
 				case config.OutputTypeTfvars:
 					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
-					output.Tfvars(w, m, o.Map, values)
+					output.Tfvars(w, secrets, o.Map, values)
 					break
 				case config.OutputTypeJson:
 					ctx.Log.Infof("exporting secrets as json ( path=%s )", path)
-					output.Json(w, m, o.Map, values)
+					output.Json(w, secrets, o.Map, values)
 					break
 				default:
 					panic(fmt.Errorf("unsupported output type %s", o.Type))
