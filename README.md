@@ -11,7 +11,8 @@ See `racoon help` or ` racoon --help` for all available commands
 ## Outputs
 
 - dotenv
-- Terraform tfvars
+- json
+- tfvars (Terraform)
 
 ## Examples
 
@@ -71,10 +72,11 @@ outputs:
 - [ ] Tagging of external resources
 - [ ] Context support (dev / production / cicd / localdev etc)
 - [ ] Key format for Parameter Store
+- [x] Remapping support for outputs (PaymetApiKey -> Payment\_\_ApiKey)
 - [ ] Generators for providing generated values when seeding a secret
 - [ ] Listing secrets in a given context
 - [ ] Deleting a secret from the store
-- [ ] Json output format
+- [x] Json output format
 - [ ] Shell (bash/zsh/sh) output format
 - [ ] Certificate output format
 - [ ] Kubernetes secret output format

@@ -1,23 +1,25 @@
 package output
 
 import (
-	"fmt"
+	"encoding/json"
 	"io"
 	"strings"
 
 	"github.com/dotnetmentor/racoon/internal/config"
 )
 
-func Tfvars(w io.Writer, m config.Manifest, keys map[string]string, values map[string]string) {
+func Json(w io.Writer, m config.Manifest, keys map[string]string, values map[string]string) {
+	jo := map[string]string{}
 	for _, s := range m.Secrets {
 		var key string
 		if remapped, ok := keys[s.Name]; ok && remapped != "" {
 			key = remapped
 		} else {
-			key = CamelCaseSplitToLowerJoinByUnderscore(s.Name)
+			key = s.Name
 		}
 
 		value := strings.TrimSuffix(values[s.Name], "\n")
-		w.Write([]byte(fmt.Sprintf("%s = \"%s\"\n", key, value)))
+		jo[key] = value
 	}
+	json.NewEncoder(w).Encode(jo)
 }
