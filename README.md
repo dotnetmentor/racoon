@@ -25,6 +25,8 @@ racoon export                                   # exports all secrets using the 
 racoon export --output direnv                   # exports all secrets using the direnv output defined in the manifest file
 racoon export --output direnv --path dot.env    # exports all secrets using the direnv output to the specified path
 racoon export -o direnv -p -                    # exports all secrets using the direnv output, writing the result to stdout
+racoon export -o direnv --include Secret1       # export Secret1 using the direnv output
+racoon export -o direnv --exclude Secret1       # export all secrets but Secret1 using the direnv output
 ```
 
 ### secrets.y\*ml
@@ -89,7 +91,8 @@ outputs:
 - [ ] Move command for moving secrets in the store
 - [ ] Init command for creating the manifest file
 - [ ] Cleaner handling of errors (less panic, more logging and exit codes)
-- [ ] Ability to select secrets for export (racoon export -s Secret1 -s Secret2)
+- [x] Ability to select secrets for export using flags (racoon export --include||--exclude Secret1)
+- [x] Ability to select secrets for export using output config (include:[] exclude:[])
 - [ ] Conditional sync for faster exports (export based on hash sum for context)
 
 ## Development
