@@ -85,7 +85,7 @@ func Export(ctx config.AppContext) *cli.Command {
 				}
 
 				file := os.Stdout
-				if path != "-" {
+				if path != "" && path != "-" {
 					if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
 						return fmt.Errorf("failed to open file for writing, %v", err)
 					}
@@ -98,11 +98,15 @@ func Export(ctx config.AppContext) *cli.Command {
 				switch o.Type {
 				case config.OutputTypeDotenv:
 					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", path)
-					output.Dotenv(w, m, values)
+					output.Dotenv(w, m, o.Map, values)
 					break
 				case config.OutputTypeTfvars:
 					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
-					output.Tfvars(w, m, values)
+					output.Tfvars(w, m, o.Map, values)
+					break
+				case config.OutputTypeJson:
+					ctx.Log.Infof("exporting secrets as json ( path=%s )", path)
+					output.Json(w, m, o.Map, values)
 					break
 				default:
 					panic(fmt.Errorf("unsupported output type %s", o.Type))

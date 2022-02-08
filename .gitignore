@@ -1,4 +1,5 @@
-output/.env
+output/*.env
 output/*.tfvars
+output/*.json
 secrets.y*ml
 dist/

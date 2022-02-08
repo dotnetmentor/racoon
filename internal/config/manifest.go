@@ -12,6 +12,7 @@ import (
 const (
 	OutputTypeDotenv OutputType = "dotenv"
 	OutputTypeTfvars OutputType = "tfvars"
+	OutputTypeJson   OutputType = "json"
 
 	StoreTypeAwsParameterStore string = "awsParameterStore"
 )
@@ -79,8 +80,9 @@ type ValueFromAwsParameterStoreConfig struct {
 }
 
 type OutputConfig struct {
-	Type OutputType `yaml:"type"`
-	Path string     `yaml:"path"`
+	Type OutputType        `yaml:"type"`
+	Path string            `yaml:"path"`
+	Map  map[string]string `yaml:"map"`
 }
 
 type OutputType string
