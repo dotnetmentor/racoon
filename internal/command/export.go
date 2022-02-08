@@ -33,9 +33,14 @@ func Export(ctx config.AppContext) *cli.Command {
 				Usage:   "export a single output to the specified path",
 			},
 			&cli.StringSliceFlag{
-				Name:    "select",
-				Aliases: []string{"s"},
-				Usage:   "export selected secret",
+				Name:    "include",
+				Aliases: []string{"i"},
+				Usage:   "include secret in export",
+			},
+			&cli.StringSliceFlag{
+				Name:    "exclude",
+				Aliases: []string{"e"},
+				Usage:   "exclude secret from export",
 			},
 		},
 		Action: func(c *cli.Context) error {
@@ -51,15 +56,20 @@ func Export(ctx config.AppContext) *cli.Command {
 				return err
 			}
 
-			selection := c.StringSlice("select")
+			includes := c.StringSlice("include")
+			excludes := c.StringSlice("exclude")
 
 			// read from store
 			secrets := []string{}
 			values := map[string]string{}
 			for _, s := range m.Secrets {
-				if len(selection) > 0 && !utils.StringSliceContains(selection, s.Name) {
+				if len(excludes) > 0 && utils.StringSliceContains(excludes, s.Name) {
 					continue
 				}
+				if len(includes) > 0 && !utils.StringSliceContains(includes, s.Name) {
+					continue
+				}
+
 				secrets = append(secrets, s.Name)
 
 				if s.Default != nil {
