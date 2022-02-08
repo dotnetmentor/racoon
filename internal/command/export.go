@@ -108,6 +108,17 @@ func Export(ctx config.AppContext) *cli.Command {
 					continue
 				}
 
+				filtered := []string{}
+				for _, s := range secrets {
+					if len(o.Exclude) > 0 && utils.StringSliceContains(o.Exclude, s) {
+						continue
+					}
+					if len(o.Include) > 0 && !utils.StringSliceContains(o.Include, s) {
+						continue
+					}
+					filtered = append(filtered, s)
+				}
+
 				file := os.Stdout
 				if path != "" && path != "-" {
 					if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
@@ -122,15 +133,15 @@ func Export(ctx config.AppContext) *cli.Command {
 				switch o.Type {
 				case config.OutputTypeDotenv:
 					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", path)
-					output.Dotenv(w, secrets, o.Map, values)
+					output.Dotenv(w, filtered, o.Map, values)
 					break
 				case config.OutputTypeTfvars:
 					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
-					output.Tfvars(w, secrets, o.Map, values)
+					output.Tfvars(w, filtered, o.Map, values)
 					break
 				case config.OutputTypeJson:
 					ctx.Log.Infof("exporting secrets as json ( path=%s )", path)
-					output.Json(w, secrets, o.Map, values)
+					output.Json(w, filtered, o.Map, values)
 					break
 				default:
 					panic(fmt.Errorf("unsupported output type %s", o.Type))

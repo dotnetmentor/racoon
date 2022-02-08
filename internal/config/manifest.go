@@ -80,9 +80,11 @@ type ValueFromAwsParameterStoreConfig struct {
 }
 
 type OutputConfig struct {
-	Type OutputType        `yaml:"type"`
-	Path string            `yaml:"path"`
-	Map  map[string]string `yaml:"map"`
+	Type    OutputType        `yaml:"type"`
+	Path    string            `yaml:"path"`
+	Map     map[string]string `yaml:"map"`
+	Include []string          `yaml:"include"`
+	Exclude []string          `yaml:"exclude"`
 }
 
 type OutputType string
