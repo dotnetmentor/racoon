@@ -17,7 +17,7 @@ const (
 	StoreTypeAwsParameterStore string = "awsParameterStore"
 )
 
-func NewManifest(paths []string) Manifest {
+func NewManifest(paths []string) (Manifest, error) {
 	// read manifest file
 	var file []byte
 	for _, filename := range paths {
@@ -29,25 +29,25 @@ func NewManifest(paths []string) Manifest {
 
 		bs, err := ioutil.ReadFile(mp)
 		if err != nil {
-			panic(fmt.Errorf("failed to read manifest file (path=%s). %v", mp, err))
+			return Manifest{}, fmt.Errorf("failed to read manifest file (path=%s). %v", mp, err)
 		}
 		file = bs
 	}
 
 	if file == nil {
-		panic(fmt.Errorf("failed to find manifest file paths=%v", paths))
+		return Manifest{}, fmt.Errorf("failed to find manifest file paths=%v", paths)
 	}
 
 	// parse
 	m := Manifest{}
 	err := yaml2.Unmarshal(file, &m)
 	if err != nil {
-		panic(fmt.Errorf("failed to parse manifest yaml. %v", err))
+		return Manifest{}, fmt.Errorf("failed to parse manifest yaml. %v", err)
 	}
 
 	// TODO: validate manifest config
 
-	return m
+	return m, nil
 }
 
 type Manifest struct {

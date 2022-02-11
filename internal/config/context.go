@@ -16,18 +16,17 @@ type AppContext struct {
 	Manifest Manifest
 }
 
-func NewContext() AppContext {
-	m := NewManifest(DefaultManifestYamlFiles)
-
+func NewContext() (AppContext, error) {
 	l := logrus.New()
 	l.Formatter = &PrefixedTextFormatter{
 		Prefix: "racoon ",
 	}
 
+	m, err := NewManifest(DefaultManifestYamlFiles)
 	c := AppContext{
 		Log:      l,
 		Manifest: m,
 	}
 
-	return c
+	return c, err
 }

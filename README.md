@@ -90,7 +90,7 @@ outputs:
 - [ ] Readonly secrets (used for consuming secret managed by external system)
 - [ ] Move command for moving secrets in the store
 - [ ] Init command for creating the manifest file
-- [ ] Cleaner handling of errors (less panic, more logging and exit codes)
+- [x] Cleaner handling of errors (less panic, more logging and exit codes)
 - [x] Ability to select secrets for export using flags (racoon export --include||--exclude Secret1)
 - [x] Ability to select secrets for export using output config (include:[] exclude:[])
 - [ ] Conditional sync for faster exports (export based on hash sum for context)
