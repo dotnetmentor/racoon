@@ -3,3 +3,4 @@ output/*.tfvars
 output/*.json
 secrets.y*ml
 dist/
+.vscode/
