@@ -25,6 +25,7 @@ func Read(ctx config.AppContext) *cli.Command {
 				return err
 			}
 
+			context := c.String("context")
 			name := strings.ToLower(strings.TrimSpace(c.Args().First()))
 
 			// read from store
@@ -41,9 +42,10 @@ func Read(ctx config.AppContext) *cli.Command {
 
 				if s.ValueFrom != nil {
 					if s.ValueFrom.AwsParameterStore != nil {
-						ctx.Log.Debugf("reading %s from %s", s.Name, config.StoreTypeAwsParameterStore)
+						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
+						ctx.Log.Debugf("reading %s from %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
 						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
-							Name:           &s.ValueFrom.AwsParameterStore.Key,
+							Name:           &key,
 							WithDecryption: true,
 						})
 						if err != nil {
@@ -51,10 +53,10 @@ func Read(ctx config.AppContext) *cli.Command {
 						}
 						value = *out.Parameter.Value
 					}
-
-					fmt.Printf("%s", value)
-					return nil
 				}
+
+				fmt.Printf("%s", value)
+				return nil
 			}
 
 			return fmt.Errorf("secret matching name %s was not found", name)

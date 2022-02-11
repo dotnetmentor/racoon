@@ -58,6 +58,7 @@ func Export(ctx config.AppContext) *cli.Command {
 
 			includes := c.StringSlice("include")
 			excludes := c.StringSlice("exclude")
+			context := c.String("context")
 
 			// read from store
 			secrets := []string{}
@@ -79,9 +80,10 @@ func Export(ctx config.AppContext) *cli.Command {
 
 				if s.ValueFrom != nil {
 					if s.ValueFrom.AwsParameterStore != nil {
-						ctx.Log.Infof("reading %s from %s", s.Name, config.StoreTypeAwsParameterStore)
-						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
-							Name:           &s.ValueFrom.AwsParameterStore.Key,
+						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
+						ctx.Log.Infof("reading %s from %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
+						out, _ := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
+							Name:           &key,
 							WithDecryption: true,
 						})
 						if err != nil {

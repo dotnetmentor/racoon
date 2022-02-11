@@ -61,7 +61,8 @@ type StoresConfig struct {
 }
 
 type AwsParameterStoreConfig struct {
-	KmsKey string `yaml:"kmsKey"`
+	KmsKey           string `yaml:"kmsKey"`
+	DefaultKeyFormat string `yaml:"keyFormat"`
 }
 
 type SecretConfig struct {
