@@ -15,6 +15,14 @@ func main() {
 	app := &cli.App{
 		Name:  "racoon",
 		Usage: "secrets are my thing",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "context",
+				Aliases: []string{"c"},
+				Usage:   "sets the context",
+				Value:   "local",
+			},
+		},
 		Commands: []*cli.Command{
 			command.Create(ctx),
 			command.Export(ctx),
