@@ -35,33 +35,35 @@ racoon export -o direnv --exclude Secret1       # export all secrets but Secret1
 stores:
   awsParameterStore:
     kmsKey: alias/parameter_store_key
+    keyFormat: "/{Context}/{Key}"
 secrets:
   - name: MongodbConnection
     description: MongoDB Connection string
     valueFrom:
       awsParameterStore:
-        key: /localdev/mongodb/connection
+        key: /fixed/key/for/mongodb/connection
   - name: TwilioAccountSid
     description: Twilio Account ID
     valueFrom:
-      awsParameterStore:
-        key: /localdev/twilio/account_sid
+      awsParameterStore: {}
   - name: TwilioAuthToken
     description: Twilio Auth Token
     valueFrom:
-      awsParameterStore:
-        key: /localdev/twilio/auth_token
+      awsParameterStore: {}
   - name: TwilioServiceId
     description: Twilio Auth Token
     valueFrom:
-      awsParameterStore:
-        key: /localdev/twilio/service_id
+      awsParameterStore: {}
   - name: DefaultSender
     description: The default sender email address
     default: noreply@mydomain.com
 outputs:
   - type: dotenv
     path: output/.env
+  - type: tfvars
+    path: output/secrets.tfvars
+    exclude:
+      - MongodbConnection
 ```
 
 ## Roadmap
