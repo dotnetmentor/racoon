@@ -72,8 +72,8 @@ outputs:
 - [x] Export outputs to stdout (no logging allowed)
 - [x] Command for reading a single secrets value
 - [ ] Tagging of external resources
-- [ ] Context support (dev / production / cicd / localdev etc)
-- [ ] Key format for Parameter Store
+- [x] Context support (dev / production / cicd / localdev etc)
+- [x] Key format for Parameter Store
 - [x] Remapping support for outputs (PaymetApiKey -> Payment\_\_ApiKey)
 - [ ] Generators for providing generated values when seeding a secret
 - [ ] Listing secrets in a given context

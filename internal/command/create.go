@@ -25,6 +25,8 @@ func Create(ctx config.AppContext) *cli.Command {
 		Name:  "create",
 		Usage: "create missing secrets defined in the manifest file",
 		Action: func(c *cli.Context) error {
+			context := c.String("context")
+
 			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
 			if err != nil {
 				return err
@@ -34,9 +36,9 @@ func Create(ctx config.AppContext) *cli.Command {
 			for _, s := range m.Secrets {
 				if s.ValueFrom != nil {
 					if s.ValueFrom.AwsParameterStore != nil {
-						key := s.ValueFrom.AwsParameterStore.Key
+						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
 
-						ctx.Log.Infof("checking if %s exists in %s", s.Name, config.StoreTypeAwsParameterStore)
+						ctx.Log.Infof("checking if %s exists in %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
 						_, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
 							Name:           &key,
 							WithDecryption: true,
