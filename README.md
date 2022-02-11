@@ -94,6 +94,7 @@ outputs:
 - [x] Ability to select secrets for export using flags (racoon export --include||--exclude Secret1)
 - [x] Ability to select secrets for export using output config (include:[] exclude:[])
 - [ ] Conditional sync for faster exports (export based on hash sum for context)
+- [ ] Dump command for creating a local cache that is used until cache is no longer available (no calls to the store when cache is available)
 
 ## Development
 
