@@ -82,7 +82,7 @@ func Export(ctx config.AppContext) *cli.Command {
 					if s.ValueFrom.AwsParameterStore != nil {
 						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
 						ctx.Log.Infof("reading %s from %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
-						out, _ := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
+						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
 							Name:           &key,
 							WithDecryption: true,
 						})
@@ -95,10 +95,13 @@ func Export(ctx config.AppContext) *cli.Command {
 			}
 
 			// create outputs
+			outputMatched := false
 			for _, o := range m.Outputs {
 				if ot != "" && string(o.Type) != ot {
 					continue
 				}
+
+				outputMatched = true
 
 				path := o.Path
 				if p != "" {
@@ -146,8 +149,12 @@ func Export(ctx config.AppContext) *cli.Command {
 					output.Json(w, filtered, o.Map, values)
 					break
 				default:
-					panic(fmt.Errorf("unsupported output type %s", o.Type))
+					return fmt.Errorf("unsupported output type %s", o.Type)
 				}
+			}
+
+			if ot != "" && !outputMatched {
+				return fmt.Errorf("unknown output type %s", ot)
 			}
 
 			return nil
