@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/dotnetmentor/racoon/internal/output"
 	yaml2 "gopkg.in/yaml.v2"
 )
 
@@ -80,12 +81,29 @@ type ValueFromAwsParameterStoreConfig struct {
 	Key string `yaml:"key"`
 }
 
+type OutputType string
+
 type OutputConfig struct {
-	Type    OutputType        `yaml:"type"`
-	Path    string            `yaml:"path"`
-	Map     map[string]string `yaml:"map"`
-	Include []string          `yaml:"include"`
-	Exclude []string          `yaml:"exclude"`
+	Type    OutputType             `yaml:"type,omitempty"`
+	Path    string                 `yaml:"path"`
+	Map     map[string]string      `yaml:"map"`
+	Include []string               `yaml:"include"`
+	Exclude []string               `yaml:"exclude"`
+	Config  map[string]interface{} `yaml:"config"`
+	output  output.Output
 }
 
-type OutputType string
+func (o *OutputConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type raw OutputConfig
+	if err := unmarshal((*raw)(o)); err != nil {
+		return err
+	}
+
+	output, err := UnmarshalConfig(o.Type, o.Config)
+	if err != nil {
+		return err
+	}
+	o.output = output
+
+	return nil
+}

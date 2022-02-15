@@ -6,7 +6,17 @@ import (
 	"strings"
 )
 
-func Json(w io.Writer, secrets []string, remap map[string]string, values map[string]string) {
+type Json struct {
+}
+
+func (o Json) Type() string {
+	return "json"
+}
+
+func NewJson() Json {
+	return Json{}
+}
+func (o Json) Write(w io.Writer, secrets []string, remap map[string]string, values map[string]string) {
 	jo := map[string]string{}
 	for _, s := range secrets {
 		var key string

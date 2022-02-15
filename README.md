@@ -60,6 +60,8 @@ secrets:
 outputs:
   - type: dotenv
     path: output/.env
+    config:
+      quote: false
   - type: tfvars
     path: output/secrets.tfvars
     exclude:
@@ -97,6 +99,8 @@ outputs:
 - [x] Ability to select secrets for export using output config (include:[] exclude:[])
 - [ ] Conditional sync for faster exports (export based on hash sum for context)
 - [ ] Dump command for creating a local cache that is used until cache is no longer available (no calls to the store when cache is available)
+- [x] Configuration of outputs (example: dotenv without doublequotes)
+- [ ] Update description on existing secrets
 
 ## Development
 
