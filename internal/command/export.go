@@ -135,18 +135,18 @@ func Export(ctx config.AppContext) *cli.Command {
 				w := bufio.NewWriter(file)
 				defer w.Flush()
 
-				switch o.Type {
-				case config.OutputTypeDotenv:
-					ctx.Log.Infof("exporting secrets as dotenv ( path=%s )", path)
-					output.Dotenv(w, filtered, o.Map, values)
+				switch out := config.AsOutput(o).(type) {
+				case output.Dotenv:
+					ctx.Log.Infof("exporting secrets as dotenv ( path=%s quote=%v )", path, out.Quote)
+					out.Write(w, filtered, o.Map, values)
 					break
-				case config.OutputTypeTfvars:
+				case output.Tfvars:
 					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
-					output.Tfvars(w, filtered, o.Map, values)
+					out.Write(w, filtered, o.Map, values)
 					break
-				case config.OutputTypeJson:
+				case output.Json:
 					ctx.Log.Infof("exporting secrets as json ( path=%s )", path)
-					output.Json(w, filtered, o.Map, values)
+					out.Write(w, filtered, o.Map, values)
 					break
 				default:
 					return fmt.Errorf("unsupported output type %s", o.Type)
