@@ -1,10 +1,12 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/dotnetmentor/racoon/internal/aws"
 	"github.com/dotnetmentor/racoon/internal/config"
@@ -49,9 +51,14 @@ func Read(ctx config.AppContext) *cli.Command {
 							WithDecryption: true,
 						})
 						if err != nil {
-							return err
+							var notFound *ssmtypes.ParameterNotFound
+							if !errors.As(err, &notFound) || s.Default == nil {
+								return err
+							}
+							ctx.Log.Infof("%s not found in %s, using default value ( key=%s default=%s )", s.Name, config.StoreTypeAwsParameterStore, key, *s.Default)
+						} else {
+							value = *out.Parameter.Value
 						}
-						value = *out.Parameter.Value
 					}
 				}
 
