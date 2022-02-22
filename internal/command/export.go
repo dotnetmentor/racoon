@@ -2,10 +2,12 @@ package command
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 
 	"github.com/dotnetmentor/racoon/internal/aws"
 	"github.com/dotnetmentor/racoon/internal/config"
@@ -87,9 +89,14 @@ func Export(ctx config.AppContext) *cli.Command {
 							WithDecryption: true,
 						})
 						if err != nil {
-							return err
+							var notFound *ssmtypes.ParameterNotFound
+							if !errors.As(err, &notFound) || s.Default == nil {
+								return err
+							}
+							ctx.Log.Infof("%s not found in %s, using default value ( key=%s default=%s )", s.Name, config.StoreTypeAwsParameterStore, key, *s.Default)
+						} else {
+							values[s.Name] = *out.Parameter.Value
 						}
-						values[s.Name] = *out.Parameter.Value
 					}
 				}
 			}

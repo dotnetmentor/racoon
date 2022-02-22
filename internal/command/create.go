@@ -25,6 +25,25 @@ func Create(ctx config.AppContext) *cli.Command {
 		Name:  "create",
 		Usage: "create missing secrets defined in the manifest file",
 		Action: func(c *cli.Context) error {
+			promptForValue := func(s config.SecretConfig) string {
+				fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
+				reader := bufio.NewReader(os.Stdin)
+				value, _ := reader.ReadString('\n')
+				value = strings.TrimSuffix(value, "\n")
+				return value
+			}
+
+			promptYesNo := func(msg string) bool {
+				fmt.Printf("%s? %s%s (yes/no) ", chalk.Green, chalk.White, msg)
+				reader := bufio.NewReader(os.Stdin)
+				value, _ := reader.ReadString('\n')
+				value = strings.TrimSuffix(value, "\n")
+				if value == "yes" || value == "y" {
+					return true
+				}
+				return false
+			}
+
 			context := c.String("context")
 
 			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
@@ -46,11 +65,14 @@ func Create(ctx config.AppContext) *cli.Command {
 						if err != nil {
 							var notFound *types.ParameterNotFound
 							if errors.As(err, &notFound) {
-								fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
-								reader := bufio.NewReader(os.Stdin)
-								value, _ := reader.ReadString('\n')
-								value = strings.TrimSuffix(value, "\n")
-								if len(value) > 0 {
+								value := promptForValue(s)
+								hasValue := len(value) > 0
+								if !hasValue && s.Default != nil {
+									if promptYesNo(fmt.Sprintf("no value was provided for secret %s, continue", s.Name)) {
+										continue
+									}
+								}
+								if hasValue {
 									ctx.Log.Infof("creating parameter %s in %s", key, config.StoreTypeAwsParameterStore)
 									i := ssm.PutParameterInput{
 										Name:        &key,
@@ -69,7 +91,7 @@ func Create(ctx config.AppContext) *cli.Command {
 									}
 									continue
 								} else {
-									return fmt.Errorf("missing value for secret %s", s.Name)
+									return fmt.Errorf("no value was provided for secret %s", s.Name)
 								}
 							} else {
 								ctx.Log.Errorf("failed to get parameter %s from %s, %v", key, config.StoreTypeAwsParameterStore, err)
