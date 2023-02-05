@@ -1,6 +1,6 @@
 module github.com/dotnetmentor/racoon
 
-go 1.17
+go 1.18
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.13.1
@@ -25,7 +25,10 @@ require (
 	github.com/aws/smithy-go v1.10.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/russross/blackfriday/v2 v2.0.1 // indirect
 	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
-	golang.org/x/sys v0.0.0-20191026070338-33540a1f6037 // indirect
+	github.com/stretchr/testify v1.4.0 // indirect
+	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )

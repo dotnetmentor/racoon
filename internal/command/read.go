@@ -14,14 +14,15 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Read(ctx config.AppContext) *cli.Command {
-	m := ctx.Manifest
-
+func Read() *cli.Command {
 	return &cli.Command{
 		Name:  "read",
-		Usage: "reads a single secret value from it's store",
+		Usage: "reads a single value",
 		Flags: []cli.Flag{},
 		Action: func(c *cli.Context) error {
+			ctx := getContext(c)
+			m := ctx.Manifest
+
 			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
 			if err != nil {
 				return err

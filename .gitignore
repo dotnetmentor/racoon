@@ -1,6 +1,7 @@
+.env
 output/*.env
 output/*.tfvars
 output/*.json
-secrets.y*ml
+racoon.y*ml
 dist/
 .vscode/

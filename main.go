@@ -11,6 +11,31 @@ import (
 const metadataExitCode string = "exitcode"
 
 func main() {
+	app, ctx := createApp()
+
+	// run commands
+	exitCode := 0
+	err := app.Run(os.Args)
+	if err != nil {
+		ctx.Log.Error(err)
+		exitCode = 1
+	}
+
+	if app.Metadata[metadataExitCode] != nil {
+		switch metaExitCode := app.Metadata[metadataExitCode].(type) {
+		case int:
+			exitCode = metaExitCode
+			break
+		default:
+			exitCode = 128
+			break
+		}
+	}
+
+	os.Exit(exitCode)
+}
+
+func createApp() (*cli.App, config.AppContext) {
 	ctx, err := config.NewContext()
 	if err != nil {
 		ctx.Log.Error(err)
@@ -30,33 +55,20 @@ func main() {
 				Name:    "context",
 				Aliases: []string{"c"},
 				Usage:   "sets the context",
-				Value:   "local",
+				Value:   "default",
+			},
+			&cli.StringFlag{
+				Name:    "manifest",
+				Aliases: []string{"m"},
+				Usage:   "path to manifest manifest file",
+				Value:   "",
 			},
 		},
 		Commands: []*cli.Command{
-			command.Create(ctx),
-			command.Export(ctx),
-			command.Read(ctx),
+			command.Create(),
+			command.Export(),
+			command.Read(),
 		},
 	}
-
-	// run commands
-	exitCode := 0
-	err = app.Run(os.Args)
-	if err != nil {
-		ctx.Log.Error(err)
-		exitCode = 1
-	}
-
-	if app.Metadata[metadataExitCode] != nil {
-		switch metaExitCode := app.Metadata[metadataExitCode].(type) {
-		case int:
-			exitCode = metaExitCode
-			break
-		default:
-			exitCode = 128
-			break
-		}
-	}
-	os.Exit(exitCode)
+	return app, ctx
 }

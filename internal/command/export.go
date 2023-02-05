@@ -17,12 +17,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Export(ctx config.AppContext) *cli.Command {
-	m := ctx.Manifest
-
+func Export() *cli.Command {
 	return &cli.Command{
 		Name:  "export",
-		Usage: "export secrets using outputs defined in the manifest file",
+		Usage: "export values using outputs defined in the manifest file",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "output",
@@ -46,6 +44,8 @@ func Export(ctx config.AppContext) *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			ctx := getContext(c)
+			m := ctx.Manifest
 			ot := c.String("output")
 			p := c.String("path")
 			if ot == "" && p != "" {

@@ -18,13 +18,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Create(ctx config.AppContext) *cli.Command {
-	m := ctx.Manifest
-
+func Create() *cli.Command {
 	return &cli.Command{
 		Name:  "create",
 		Usage: "create missing secrets defined in the manifest file",
 		Action: func(c *cli.Context) error {
+			ctx := getContext(c)
+			m := ctx.Manifest
+
 			promptForValue := func(s config.SecretConfig) string {
 				fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
 				reader := bufio.NewReader(os.Stdin)

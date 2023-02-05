@@ -6,8 +6,8 @@ import (
 
 var (
 	DefaultManifestYamlFiles []string = []string{
-		"./secrets.yaml",
-		"./secrets.yml",
+		"./racoon.yaml",
+		"./racoon.yml",
 	}
 )
 
@@ -16,13 +16,19 @@ type AppContext struct {
 	Manifest Manifest
 }
 
-func NewContext() (AppContext, error) {
+func NewContext(paths ...string) (AppContext, error) {
 	l := logrus.New()
 	l.Formatter = &PrefixedTextFormatter{
 		Prefix: "racoon ",
 	}
 
-	m, err := NewManifest(DefaultManifestYamlFiles)
+	if len(paths) == 0 {
+		return AppContext{
+			Log: l,
+		}, nil
+	}
+
+	m, err := NewManifest(paths)
 	c := AppContext{
 		Log:      l,
 		Manifest: m,

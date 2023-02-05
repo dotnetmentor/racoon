@@ -1,4 +1,4 @@
-# racoon - secrets are my thing
+# racoon - config and secrets are my thing
 
 ## Commands
 
@@ -20,16 +20,16 @@ See `racoon help` or ` racoon --help` for all available commands
 
 ```bash
 racoon create                                   # ensures secrets missing in the remote store are created by prompting the user for input
-racoon read MongodbConnection                   # reads a single secret from the remote store and writes it's value to stdout
-racoon export                                   # exports all secrets using the outputs defines in the manifest file
-racoon export --output direnv                   # exports all secrets using the direnv output defined in the manifest file
-racoon export --output direnv --path dot.env    # exports all secrets using the direnv output to the specified path
-racoon export -o direnv -p -                    # exports all secrets using the direnv output, writing the result to stdout
+racoon read MongodbConnection                   # reads a single value and writes it's value to stdout
+racoon export                                   # exports all values using the outputs defines in the manifest file
+racoon export --output direnv                   # exports all values using the direnv output defined in the manifest file
+racoon export --output direnv --path dot.env    # exports all values using the direnv output to the specified path
+racoon export -o direnv -p -                    # exports all values using the direnv output, writing the result to stdout
 racoon export -o direnv --include Secret1       # export Secret1 using the direnv output
-racoon export -o direnv --exclude Secret1       # export all secrets but Secret1 using the direnv output
+racoon export -o direnv --exclude Secret1       # export all values but Secret1 using the direnv output
 ```
 
-### secrets.y\*ml
+### racoon.y\*ml
 
 ```yaml
 stores:
@@ -86,11 +86,12 @@ outputs:
 - [ ] Shell (bash/zsh/sh) output format
 - [ ] Certificate output format
 - [ ] Kubernetes secret output format
+- [ ] Kubernetes configmap output format
 - [ ] Naming conventions for outputs
 - [ ] Command for local cleanup of generated files
 - [ ] Store provider for AWS Secrets Manager : Secrets
 - [ ] Store provider for Azure Key Vault : Secrets
-- [ ] Flag for specifying other filenames for secrets.y\*ml
+- [x] Flag for specifying other filenames for racoon.y\*ml
 - [ ] Readonly secrets (used for consuming secret managed by external system)
 - [ ] Move command for moving secrets in the store
 - [ ] Init command for creating the manifest file
@@ -101,6 +102,9 @@ outputs:
 - [ ] Dump command for creating a local cache that is used until cache is no longer available (no calls to the store when cache is available)
 - [x] Configuration of outputs (example: dotenv without doublequotes)
 - [ ] Update description on existing secrets
+- [ ] Validate command or a --validate flag for the create command
+- [ ] Command for finding secret manifests recursively and display a graph on secrets usage
+- [ ] Value from command (command: cmd: "uuidgen --context={Context} --other={Overlay}" format: "{Value}"))
 
 ## Development
 
