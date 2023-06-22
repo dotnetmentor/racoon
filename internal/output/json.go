@@ -16,17 +16,17 @@ func (o Json) Type() string {
 func NewJson() Json {
 	return Json{}
 }
-func (o Json) Write(w io.Writer, secrets []string, remap map[string]string, values map[string]string) {
+func (o Json) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {
 	jo := map[string]string{}
-	for _, s := range secrets {
+	for _, k := range keys {
 		var key string
-		if remapped, ok := remap[s]; ok && remapped != "" {
+		if remapped, ok := remap[k]; ok && remapped != "" {
 			key = remapped
 		} else {
-			key = s
+			key = k
 		}
 
-		value := strings.TrimSuffix(values[s], "\n")
+		value := strings.TrimSuffix(values[k], "\n")
 		jo[key] = value
 	}
 	json.NewEncoder(w).Encode(jo)

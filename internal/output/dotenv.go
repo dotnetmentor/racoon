@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/dotnetmentor/racoon/internal/utils"
 )
 
 type Dotenv struct {
@@ -20,16 +22,16 @@ func NewDotenv() Dotenv {
 	}
 }
 
-func (o Dotenv) Write(w io.Writer, secrets []string, remap map[string]string, values map[string]string) {
-	for _, s := range secrets {
+func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {
+	for _, k := range keys {
 		var key string
-		if remapped, ok := remap[s]; ok && remapped != "" {
+		if remapped, ok := remap[k]; ok && remapped != "" {
 			key = remapped
 		} else {
-			key = CamelCaseSplitToUpperJoinByUnderscore(s)
+			key = utils.CamelCaseSplitToUpperJoinByUnderscore(k)
 		}
 
-		value := strings.TrimSuffix(values[s], "\n")
+		value := strings.TrimSuffix(values[k], "\n")
 		format := "%s=%s\n"
 		if o.Quote {
 			format = "%s=\"%s\"\n"
