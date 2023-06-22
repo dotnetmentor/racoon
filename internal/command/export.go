@@ -2,14 +2,9 @@ package command
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-
-	"github.com/dotnetmentor/racoon/internal/aws"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/output"
 	"github.com/dotnetmentor/racoon/internal/utils"
@@ -20,91 +15,76 @@ import (
 func Export() *cli.Command {
 	return &cli.Command{
 		Name:  "export",
-		Usage: "export values using outputs defined in the manifest file",
+		Usage: "export values",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
-				Usage:   "export a single output",
+				Usage:   "export using output",
+			},
+			&cli.StringFlag{
+				Name:    "alias",
+				Aliases: []string{"a"},
+				Usage:   "export using output matching alias",
 			},
 			&cli.StringFlag{
 				Name:    "path",
 				Aliases: []string{"p"},
-				Usage:   "export a single output to the specified path",
+				Usage:   "export output to the specified path",
 			},
 			&cli.StringSliceFlag{
 				Name:    "include",
 				Aliases: []string{"i"},
-				Usage:   "include secret in export",
+				Usage:   "include property in export",
 			},
 			&cli.StringSliceFlag{
 				Name:    "exclude",
 				Aliases: []string{"e"},
-				Usage:   "exclude secret from export",
+				Usage:   "exclude property from export",
 			},
 		},
 		Action: func(c *cli.Context) error {
-			ctx := getContext(c)
+			ctx, err := getContext(c)
+			if err != nil {
+				return err
+			}
 			m := ctx.Manifest
+
 			ot := c.String("output")
+			oa := c.String("alias")
 			p := c.String("path")
+
+			includes := c.StringSlice("include")
+			excludes := c.StringSlice("exclude")
+
 			if ot == "" && p != "" {
 				ctx.Log.Warn("the flag --path is not allowed without also specifying the --output flag")
 				return nil
 			}
 
-			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
+			vs := &ValueSource{
+				context:    ctx,
+				properties: make([]Property, 0),
+			}
+
+			keys, values, err := vs.ReadAll(excludes, includes)
 			if err != nil {
 				return err
 			}
 
-			includes := c.StringSlice("include")
-			excludes := c.StringSlice("exclude")
-			context := c.String("context")
-
-			// read from store
-			secrets := []string{}
-			values := map[string]string{}
-			for _, s := range m.Secrets {
-				if len(excludes) > 0 && utils.StringSliceContains(excludes, s.Name) {
-					continue
-				}
-				if len(includes) > 0 && !utils.StringSliceContains(includes, s.Name) {
-					continue
-				}
-
-				secrets = append(secrets, s.Name)
-
-				if s.Default != nil {
-					ctx.Log.Infof("reading %s from %s", s.Name, "default")
-					values[s.Name] = *s.Default
-				}
-
-				if s.ValueFrom != nil {
-					if s.ValueFrom.AwsParameterStore != nil {
-						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
-						ctx.Log.Infof("reading %s from %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
-						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
-							Name:           &key,
-							WithDecryption: true,
-						})
-						if err != nil {
-							var notFound *ssmtypes.ParameterNotFound
-							if !errors.As(err, &notFound) || s.Default == nil {
-								return err
-							}
-							ctx.Log.Infof("%s not found in %s, using default value ( key=%s default=%s )", s.Name, config.StoreTypeAwsParameterStore, key, *s.Default)
-						} else {
-							values[s.Name] = *out.Parameter.Value
-						}
-					}
-				}
-			}
-
-			// create outputs
+			// output
 			outputMatched := false
 			for _, o := range m.Outputs {
 				if ot != "" && string(o.Type) != ot {
+					continue
+				}
+
+				if oa != "" && o.Alias != oa {
+					oid := string(o.Type)
+					if len(o.Alias) > 0 {
+						oid = fmt.Sprintf("%s/%s", oid, o.Alias)
+					}
+					ctx.Log.Debugf("skipping %s output, did not match the alias %s", oid, oa)
 					continue
 				}
 
@@ -121,40 +101,55 @@ func Export() *cli.Command {
 				}
 
 				filtered := []string{}
-				for _, s := range secrets {
+				filteredValues := make(map[string]string)
+				for _, s := range keys {
 					if len(o.Exclude) > 0 && utils.StringSliceContains(o.Exclude, s) {
 						continue
 					}
 					if len(o.Include) > 0 && !utils.StringSliceContains(o.Include, s) {
 						continue
 					}
+
+					switch o.Export {
+					case config.ExportTypeClearText:
+						switch values[s].(type) {
+						case *SensitiveValue:
+							continue
+						}
+					case config.ExportTypeSensitive:
+						switch values[s].(type) {
+						case *ClearTextValue:
+							continue
+						}
+					}
+
 					filtered = append(filtered, s)
+					filteredValues[s] = values[s].Raw()
 				}
 
-				file := os.Stdout
+				out := os.Stdout
 				if path != "" && path != "-" {
-					if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
+					file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+					if err != nil {
 						return fmt.Errorf("failed to open file for writing, %v", err)
 					}
 					defer file.Close()
 					defer file.Sync()
+					out = file
 				}
-				w := bufio.NewWriter(file)
+				w := bufio.NewWriter(out)
 				defer w.Flush()
 
 				switch out := config.AsOutput(o).(type) {
 				case output.Dotenv:
-					ctx.Log.Infof("exporting secrets as dotenv ( path=%s quote=%v )", path, out.Quote)
-					out.Write(w, filtered, o.Map, values)
-					break
+					ctx.Log.Infof("exporting values as dotenv ( path=%s quote=%v )", path, out.Quote)
+					out.Write(w, filtered, o.Map, filteredValues)
 				case output.Tfvars:
-					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
-					out.Write(w, filtered, o.Map, values)
-					break
+					ctx.Log.Infof("exporting values as tfvars ( path=%s )", path)
+					out.Write(w, filtered, o.Map, filteredValues)
 				case output.Json:
-					ctx.Log.Infof("exporting secrets as json ( path=%s )", path)
-					out.Write(w, filtered, o.Map, values)
-					break
+					ctx.Log.Infof("exporting values as json ( path=%s )", path)
+					out.Write(w, filtered, o.Map, filteredValues)
 				default:
 					return fmt.Errorf("unsupported output type %s", o.Type)
 				}

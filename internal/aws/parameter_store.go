@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/fatih/camelcase"
 
-	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/utils"
 )
 
@@ -26,22 +25,20 @@ func NewParameterStoreClient(ctx context.Context) (*ssm.Client, error) {
 	return ssm.NewFromConfig(awsConfig), nil
 }
 
-func ParameterStoreKey(c config.AwsParameterStoreConfig, s config.SecretConfig, context string) string {
-	key := s.ValueFrom.AwsParameterStore.Key
-	if key == "" {
-		key = c.DefaultKeyFormat
-	}
-	nameKey := camelCaseSplitToLowerJoinBySlashAndUnderscore(s.Name)
-	key = strings.ReplaceAll(key, "{Context}", context)
-	key = strings.ReplaceAll(key, "{Key}", nameKey)
+func ParameterStoreKey(format, key string) string {
+	nameKey := camelCaseSplitToLowerJoinBySlashAndUnderscore(key)
+	key = strings.ReplaceAll(format, "{key}", nameKey)
 	return key
 }
 
 func camelCaseSplitToLowerJoinBySlashAndUnderscore(name string) (key string) {
 	parts := camelcase.Split(name)
+	if len(parts) == 1 {
+		return parts[0]
+	}
+
 	for i, part := range parts {
 		parts[i] = strings.ToLower(part)
 	}
-	key = fmt.Sprintf("%s/%s", parts[0], strings.Join(parts[1:], "_"))
-	return
+	return fmt.Sprintf("%s/%s", parts[0], strings.Join(parts[1:], "_"))
 }

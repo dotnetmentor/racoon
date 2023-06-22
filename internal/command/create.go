@@ -23,11 +23,14 @@ func Create() *cli.Command {
 		Name:  "create",
 		Usage: "create missing secrets defined in the manifest file",
 		Action: func(c *cli.Context) error {
-			ctx := getContext(c)
+			ctx, err := getContext(c)
+			if err != nil {
+				return err
+			}
 			m := ctx.Manifest
 
-			promptForValue := func(s config.SecretConfig) string {
-				fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, s.Name, s.Description)
+			promptForValue := func(p config.PropertyConfig) string {
+				fmt.Printf("%s? %s%s (%s) ", chalk.Green, chalk.White, p.Name, p.Description)
 				reader := bufio.NewReader(os.Stdin)
 				value, _ := reader.ReadString('\n')
 				value = strings.TrimSuffix(value, "\n")
@@ -45,20 +48,22 @@ func Create() *cli.Command {
 				return false
 			}
 
-			context := c.String("context")
-
 			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
 			if err != nil {
 				return err
 			}
 
 			// create missing in store
-			for _, s := range m.Secrets {
-				if s.ValueFrom != nil {
-					if s.ValueFrom.AwsParameterStore != nil {
-						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
+			for _, p := range m.Properties {
+				if p.Source != nil {
+					if p.Source.AwsParameterStore != nil {
+						pskf := m.Config.Sources.AwsParameterStore.KeyFormat
+						if len(p.Source.AwsParameterStore.Key) > 0 {
+							pskf = p.Source.AwsParameterStore.Key
+						}
+						key := aws.ParameterStoreKey(replaceParams(pskf, ctx.Parameters), p.Name)
 
-						ctx.Log.Infof("checking if %s exists in %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
+						ctx.Log.Infof("checking if %s exists in %s ( key=%s )", p.Name, config.SourceTypeAwsParameterStore, key)
 						_, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
 							Name:           &key,
 							WithDecryption: true,
@@ -66,36 +71,36 @@ func Create() *cli.Command {
 						if err != nil {
 							var notFound *types.ParameterNotFound
 							if errors.As(err, &notFound) {
-								value := promptForValue(s)
+								value := promptForValue(p)
 								hasValue := len(value) > 0
-								if !hasValue && s.Default != nil {
-									if promptYesNo(fmt.Sprintf("no value was provided for secret %s, continue", s.Name)) {
+								if !hasValue && p.Default != nil {
+									if promptYesNo(fmt.Sprintf("no value was provided for secret %s, continue", p.Name)) {
 										continue
 									}
 								}
 								if hasValue {
-									ctx.Log.Infof("creating parameter %s in %s", key, config.StoreTypeAwsParameterStore)
+									ctx.Log.Infof("creating parameter %s in %s", key, config.SourceTypeAwsParameterStore)
 									i := ssm.PutParameterInput{
 										Name:        &key,
-										Description: &s.Description,
+										Description: &p.Description,
 										Value:       &value,
 										Type:        types.ParameterTypeSecureString,
 										Tier:        types.ParameterTierStandard,
 									}
-									if m.Stores.AwsParameterStore.KmsKey != "" {
-										i.KeyId = &m.Stores.AwsParameterStore.KmsKey
+									if m.Config.Sources.AwsParameterStore.KmsKey != "" {
+										i.KeyId = &m.Config.Sources.AwsParameterStore.KmsKey
 									}
 									_, err := awsParameterStore.PutParameter(c.Context, &i)
 									if err != nil {
-										ctx.Log.Errorf("failed to create parameter %s in %s, %v", key, config.StoreTypeAwsParameterStore, err)
+										ctx.Log.Errorf("failed to create parameter %s in %s, %v", key, config.SourceTypeAwsParameterStore, err)
 										return err
 									}
 									continue
 								} else {
-									return fmt.Errorf("no value was provided for secret %s", s.Name)
+									return fmt.Errorf("no value was provided for secret %s", p.Name)
 								}
 							} else {
-								ctx.Log.Errorf("failed to get parameter %s from %s, %v", key, config.StoreTypeAwsParameterStore, err)
+								ctx.Log.Errorf("failed to get parameter %s from %s, %v", key, config.SourceTypeAwsParameterStore, err)
 								return err
 							}
 						} else {

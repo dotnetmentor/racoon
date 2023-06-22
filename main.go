@@ -5,6 +5,7 @@ import (
 
 	"github.com/dotnetmentor/racoon/internal/command"
 	"github.com/dotnetmentor/racoon/internal/config"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -25,10 +26,8 @@ func main() {
 		switch metaExitCode := app.Metadata[metadataExitCode].(type) {
 		case int:
 			exitCode = metaExitCode
-			break
 		default:
 			exitCode = 128
-			break
 		}
 	}
 
@@ -52,22 +51,36 @@ func createApp() (*cli.App, config.AppContext) {
 		},
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:    "context",
-				Aliases: []string{"c"},
-				Usage:   "sets the context",
-				Value:   "default",
-			},
-			&cli.StringFlag{
 				Name:    "manifest",
 				Aliases: []string{"m"},
 				Usage:   "path to manifest manifest file",
 				Value:   "",
+			},
+			&cli.StringFlag{
+				Name:    "loglevel",
+				Aliases: []string{},
+				Usage:   "sets the log level",
+				Value:   "info",
+			},
+			&cli.StringSliceFlag{
+				Name:    "layer",
+				Aliases: []string{"l"},
+				Usage:   "sets layer parameters",
 			},
 		},
 		Commands: []*cli.Command{
 			command.Create(),
 			command.Export(),
 			command.Read(),
+		},
+		Before: func(c *cli.Context) error {
+			l := c.String("loglevel")
+			level, err := logrus.ParseLevel(l)
+			if err != nil {
+				return err
+			}
+			ctx.Log.SetLevel(level)
+			return nil
 		},
 	}
 	return app, ctx

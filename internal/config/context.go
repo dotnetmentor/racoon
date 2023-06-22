@@ -1,6 +1,8 @@
 package config
 
 import (
+	"context"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,9 +14,13 @@ var (
 )
 
 type AppContext struct {
-	Log      *logrus.Logger
-	Manifest Manifest
+	Context    context.Context
+	Log        *logrus.Logger
+	Manifest   Manifest
+	Parameters Parameters
 }
+
+type Parameters map[string]string
 
 func NewContext(paths ...string) (AppContext, error) {
 	l := logrus.New()
