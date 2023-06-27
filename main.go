@@ -58,13 +58,13 @@ func createApp() (*cli.App, config.AppContext) {
 			},
 			&cli.StringFlag{
 				Name:    "loglevel",
-				Aliases: []string{},
+				Aliases: []string{"l"},
 				Usage:   "sets the log level",
 				Value:   "info",
 			},
 			&cli.StringSliceFlag{
-				Name:    "layer",
-				Aliases: []string{"l"},
+				Name:    "parameter",
+				Aliases: []string{"p"},
 				Usage:   "sets layer parameters",
 			},
 		},

@@ -101,7 +101,7 @@ outputs:
 - [ ] Conditional sync for faster exports (export based on hash sum for context)
 - [ ] Dump command for creating a local cache that is used until cache is no longer available (no calls to the store when cache is available)
 - [x] Configuration of outputs (example: dotenv without doublequotes)
-- [ ] Update description on existing secrets
+- [x] Update description on existing secrets
 - [ ] Validate command or a --validate flag for the create command
 - [ ] Command for finding secret manifests recursively and display a graph on secrets usage
 - [ ] Value from command (command: cmd: "uuidgen --context={Context} --other={Overlay}" format: "{Value}"))

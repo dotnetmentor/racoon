@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
@@ -28,9 +29,13 @@ type AwsParameterStore struct {
 }
 
 func (s *AwsParameterStore) Read(ctx config.AppContext, layer api.Layer, key string, sensitive bool, propertySource config.ValueFromAwsParameterStore, sourceConfig config.AwsParameterStoreConfig) api.Value {
-	pskf := sourceConfig.KeyFormat
+	pskf := sourceConfig.DefaultKey
 	if len(propertySource.Key) > 0 {
 		pskf = propertySource.Key
+	}
+
+	if len(pskf) == 0 {
+		return api.NewValue(api.NewValueSource(layer, api.SourceTypeAwsParameterStore), "", "", missingKeyError(), sensitive || sourceConfig.ForceSensitive)
 	}
 
 	psk := awpParameterStoreKey(config.ReplaceParams(pskf, ctx.Parameters), key)
@@ -102,4 +107,38 @@ func camelCaseSplitToLowerJoinBySlashAndUnderscore(name string) (key string) {
 		parts[i] = strings.ToLower(part)
 	}
 	return fmt.Sprintf("%s/%s", parts[0], strings.Join(parts[1:], "_"))
+}
+
+// NOTE: Really ugly hack to avoid magic strings, poor performance expected
+func missingKeyError() error {
+	m := config.Manifest{}
+	p := config.PropertyConfig{
+		Source: &config.PropertyValueFrom{
+			AwsParameterStore: &config.ValueFromAwsParameterStore{},
+		},
+	}
+	configKey := strings.Join(tagsForFields(&m, &m.Config, &m.Config.Sources, &m.Config.Sources.AwsParameterStore, &m.Config.Sources.AwsParameterStore.DefaultKey), ".")
+	sourceKey := strings.Join(tagsForFields(&p, &p.Source, &p.Source.AwsParameterStore, &p.Source.AwsParameterStore.Key), ".")
+	return fmt.Errorf("key missing for %s, set %s or %s", api.SourceTypeAwsParameterStore, configKey, sourceKey)
+}
+
+func tagsForFields(fields ...interface{}) (tags []string) {
+	for fi, f := range fields {
+		if len(fields) > fi+1 {
+			nfv := fields[fi+1]
+			fv := reflect.ValueOf(f).Elem()
+			if fv.Kind() == reflect.Ptr {
+				fv = fv.Elem()
+			}
+			for i := 0; i < fv.NumField(); i++ {
+				if fv.Field(i).Addr().Interface() == nfv {
+					tag := fv.Type().Field(i).Tag.Get("yaml")
+					tag = strings.ReplaceAll(tag, ",omitempty", "")
+					tags = append(tags, tag)
+					break
+				}
+			}
+		}
+	}
+	return
 }

@@ -44,16 +44,8 @@ func Write() *cli.Command {
 				return
 			}
 
-			promptForValue := func(p api.Property, v api.Value, decode bool) string {
-				cv := "<nil>"
-				if v != nil {
-					if decode {
-						cv = v.Raw()
-					} else {
-						cv = v.String()
-					}
-				}
-				fmt.Printf("%s? %s%s (%s) [%s] ", chalk.Green, chalk.White, p.Name, p.Description, cv)
+			promptForValue := func(p api.Property) string {
+				fmt.Printf("%s? %s%s (%s): ", chalk.Green, chalk.White, p.Name, p.Description)
 				reader := bufio.NewReader(os.Stdin)
 				value, _ := reader.ReadString('\n')
 				value = strings.TrimSuffix(value, "\n")
@@ -124,11 +116,16 @@ func Write() *cli.Command {
 							}
 						}
 
+						if !api.IsNotFoundError(dest.Error()) && dest.Sensitive() && promptYesNo("preview current value (sensitive)") {
+							// NOTE: This is one of the few time where it is OK to print the raw value
+							fmt.Printf("%s! %scurrent value:%s %s\n", chalk.Green, chalk.White, chalk.Cyan, dest.Raw())
+						}
+
 						for {
-							strVal := promptForValue(p, dest, !api.IsNotFoundError(dest.Error()) && dest.Sensitive() && promptYesNo("preview sensitive value"))
+							strVal := promptForValue(p)
 							newVal := api.NewValue(dest.Source(), dest.Key(), strVal, nil, dest.Sensitive())
 							if err := p.Validate(newVal); err != nil {
-								ctx.Log.Error(err)
+								fmt.Printf("%s! %serror: %v\n", chalk.Red, chalk.White, err)
 								continue
 							}
 
@@ -136,7 +133,7 @@ func Write() *cli.Command {
 								break
 							}
 
-							ctx.Log.Infof("setting property %s in %s, new value: %s", p.Name, dest.Source(), strVal)
+							ctx.Log.Infof("setting property %s in %s, new value: %s", p.Name, dest.Source(), newVal.String())
 							err := visit.Store().Write(dest.Key(), strVal, p.Description, dest.Source().Type(), ctx.Manifest.Config.Sources)
 							if err != nil {
 								return err

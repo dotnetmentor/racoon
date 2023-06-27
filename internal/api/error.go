@@ -90,7 +90,7 @@ type NotFoundError struct {
 }
 
 func (e *NotFoundError) Error() string {
-	return fmt.Sprintf("NotFoundError, %s (source=%s, key=%s)", e.msg, e.source, e.key)
+	return fmt.Sprintf("NotFoundError, %s (source=%s key=%s)", e.msg, e.source, e.key)
 }
 
 func (e *NotFoundError) InnerError() error {
@@ -104,7 +104,7 @@ type ValidationError struct {
 
 func (e *ValidationError) Error() string {
 	if e.val != nil {
-		return fmt.Sprintf("ValidationError, %s (source=%s, value=%s)", e.msg, e.val.Source(), e.val)
+		return fmt.Sprintf("ValidationError, %s (source=%s value=%s)", e.msg, e.val.Source(), e.val)
 	}
 	return fmt.Sprintf("ValidationError, %s (value=<nil>)", e.msg)
 }

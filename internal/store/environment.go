@@ -25,15 +25,17 @@ func (s *Environment) Read(ctx config.AppContext, layer api.Layer, key string, s
 		if utils.StringSliceContains(s.dotfilesLoaded, df) {
 			continue
 		}
-		s.dotfilesLoaded = append(s.dotfilesLoaded, df)
 
 		if err := godotenv.Overload(df); err != nil {
 			if os.IsNotExist(err) {
-				ctx.Log.Infof("dotenv file %s was not found", df)
+				ctx.Log.Warnf("dotenv file %s was not found", df)
 			} else {
 				return api.NewValue(api.NewValueSource(layer, api.SourceTypeEnvironment), "", "", err, sensitive)
 			}
 		}
+
+		ctx.Log.Debugf("dotenv file %s loaded", df)
+		s.dotfilesLoaded = append(s.dotfilesLoaded, df)
 	}
 
 	keys := make([]string, 0)

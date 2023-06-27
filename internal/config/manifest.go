@@ -55,7 +55,7 @@ func NewManifest(paths []string) (Manifest, error) {
 
 	// parse
 	m := Manifest{}
-	err := yaml2.Unmarshal(file, &m)
+	err := yaml2.UnmarshalStrict(file, &m)
 	if err != nil {
 		return Manifest{}, fmt.Errorf("failed to parse manifest yaml. %v", err)
 	}
@@ -126,25 +126,25 @@ func (l PropertyList) Remove(pl PropertyList) (properties PropertyList) {
 type ParameterConfig map[string]ParameterRule
 
 type ParameterRule struct {
-	Required bool `yaml:"required,omitempty"`
+	Required bool `yaml:"required"`
 }
 
 type SourceConfig struct {
-	AwsParameterStore AwsParameterStoreConfig `yaml:"awsParameterStore,omitempty"`
-	Env               EnvConfig               `yaml:"env,omitempty"`
+	AwsParameterStore AwsParameterStoreConfig `yaml:"awsParameterStore"`
+	Env               EnvConfig               `yaml:"env"`
 }
 
 type AwsParameterStoreConfig struct {
 	ForceSensitive bool   `yaml:"forceSensitive"`
 	KmsKey         string `yaml:"kmsKey"`
-	KeyFormat      string `yaml:"keyFormat"`
+	DefaultKey     string `yaml:"defaultKey"`
 }
 
 func (c AwsParameterStoreConfig) Merge(config AwsParameterStoreConfig) AwsParameterStoreConfig {
 	nc := AwsParameterStoreConfig{
 		ForceSensitive: c.ForceSensitive,
 		KmsKey:         c.KmsKey,
-		KeyFormat:      c.KeyFormat,
+		DefaultKey:     c.DefaultKey,
 	}
 
 	if config.ForceSensitive {
@@ -155,15 +155,15 @@ func (c AwsParameterStoreConfig) Merge(config AwsParameterStoreConfig) AwsParame
 		nc.KmsKey = config.KmsKey
 	}
 
-	if len(config.KeyFormat) > 0 && nc.KeyFormat != config.KeyFormat {
-		nc.KeyFormat = config.KeyFormat
+	if len(config.DefaultKey) > 0 && nc.DefaultKey != config.DefaultKey {
+		nc.DefaultKey = config.DefaultKey
 	}
 
 	return nc
 }
 
 type EnvConfig struct {
-	Dotfiles []string `yaml:"dotfiles,omitempty"`
+	Dotfiles []string `yaml:"dotfiles"`
 }
 
 type PropertyConfig struct {
@@ -173,11 +173,32 @@ type PropertyConfig struct {
 	Sensitive   bool               `yaml:"sensitive,omitempty"`
 	Source      *PropertyValueFrom `yaml:"source,omitempty"`
 	Format      *FormattingConfig  `yaml:"format,omitempty"`
-	Rules       RuleConfig         `yaml:"rules,omitempty"`
+	Rules       RuleConfig         `yaml:"rules"`
+}
+
+func (s *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawConfig PropertyConfig
+
+	// Put defaults here
+	raw := rawConfig{
+		Rules: RuleConfig{
+			Override: OverrideConfig{
+				AllowImplicit: true,
+				AllowExplicit: true,
+			},
+		},
+	}
+
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*s = PropertyConfig(raw)
+	return nil
 }
 
 type FormattingConfig struct {
-	Replace map[string]*PropertyValueFrom `yaml:"replace,omitempty"`
+	Replace map[string]*PropertyValueFrom `yaml:"replace"`
 }
 
 type RuleConfig struct {
@@ -190,8 +211,8 @@ type ValidationConfig struct {
 }
 
 type OverrideConfig struct {
-	DenyImplicit bool `yaml:"denyImplicit"`
-	DenyExplicit bool `yaml:"denyExplicit"`
+	AllowImplicit bool `yaml:"allowImplicit"`
+	AllowExplicit bool `yaml:"allowExplicit"`
 }
 
 type PropertyValueFrom struct {
@@ -202,7 +223,7 @@ type PropertyValueFrom struct {
 }
 
 type ValueFromEvnironment struct {
-	Key string `yaml:"key,omitempty"`
+	Key string `yaml:"key"`
 }
 
 type ValueFromAwsParameterStore struct {
@@ -210,7 +231,7 @@ type ValueFromAwsParameterStore struct {
 }
 
 type OutputConfig struct {
-	Type    OutputType             `yaml:"type,omitempty"`
+	Type    OutputType             `yaml:"type"`
 	Alias   string                 `yaml:"alias"`
 	Path    string                 `yaml:"path"`
 	Map     map[string]string      `yaml:"map"`

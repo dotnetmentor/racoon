@@ -51,9 +51,17 @@ func Read() *cli.Command {
 					return err
 				}
 
-				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
-
 				value = val
+
+				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+				for _, v := range p.Values() {
+					if err := p.Validate(v); err != nil {
+						ctx.Log.Debugf("- value from %s is invalid, err: %v", v.Source(), err)
+					} else {
+						ctx.Log.Debugf("- value from %s, value: %s", v.Source(), v.String())
+					}
+				}
+
 				return nil
 			})
 			if err != nil {

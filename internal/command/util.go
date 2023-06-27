@@ -28,7 +28,7 @@ func getContext(c *cli.Context) (config.AppContext, error) {
 	}
 	ctx.Log.SetLevel(level)
 
-	p, err := config.ParseParams(c.StringSlice("layer"))
+	p, err := config.ParseParams(c.StringSlice("parameter"))
 	if err != nil {
 		ctx.Log.Error(err)
 		ctx.Log.Exit(1)

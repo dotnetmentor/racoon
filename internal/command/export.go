@@ -31,7 +31,7 @@ func Export() *cli.Command {
 			},
 			&cli.StringFlag{
 				Name:    "path",
-				Aliases: []string{"p"},
+				Aliases: []string{}, // 'p' not possible as alias
 				Usage:   "export output to the specified path",
 			},
 			&cli.StringSliceFlag{
@@ -100,7 +100,14 @@ func Export() *cli.Command {
 
 				values[key] = val
 
-				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+				ctx.Log.Infof("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+				for _, v := range p.Values() {
+					if err := p.Validate(v); err != nil {
+						ctx.Log.Debugf("- value from %s is invalid, err: %v", v.Source(), err)
+					} else {
+						ctx.Log.Debugf("- value from %s, value: %s", v.Source(), v.String())
+					}
+				}
 
 				return nil
 			})
@@ -163,31 +170,38 @@ func Export() *cli.Command {
 					filteredValues[s] = values[s].Raw()
 				}
 
-				out := os.Stdout
-				if path != "" && path != "-" {
-					file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-					if err != nil {
-						return fmt.Errorf("failed to open file for writing, %v", err)
+				err := func() error {
+					out := os.Stdout
+					if path != "" && path != "-" {
+						file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+						if err != nil {
+							return fmt.Errorf("failed to open file for writing, %v", err)
+						}
+						defer file.Close()
+						defer file.Sync()
+						out = file
 					}
-					defer file.Close()
-					defer file.Sync()
-					out = file
-				}
-				w := bufio.NewWriter(out)
-				defer w.Flush()
+					w := bufio.NewWriter(out)
+					defer w.Flush()
 
-				switch out := config.AsOutput(o).(type) {
-				case output.Dotenv:
-					ctx.Log.Infof("exporting values as dotenv ( path=%s quote=%v )", path, out.Quote)
-					out.Write(w, filtered, o.Map, filteredValues)
-				case output.Tfvars:
-					ctx.Log.Infof("exporting values as tfvars ( path=%s )", path)
-					out.Write(w, filtered, o.Map, filteredValues)
-				case output.Json:
-					ctx.Log.Infof("exporting values as json ( path=%s )", path)
-					out.Write(w, filtered, o.Map, filteredValues)
-				default:
-					return fmt.Errorf("unsupported output type %s", o.Type)
+					switch out := config.AsOutput(o).(type) {
+					case output.Dotenv:
+						ctx.Log.Infof("exporting values as dotenv (alias=%s path=%s quote=%v)", o.Alias, path, out.Quote)
+						out.Write(w, filtered, o.Map, filteredValues)
+					case output.Tfvars:
+						ctx.Log.Infof("exporting values as tfvars (alias=%s path=%s)", o.Alias, path)
+						out.Write(w, filtered, o.Map, filteredValues)
+					case output.Json:
+						ctx.Log.Infof("exporting values as json (alias=%s path=%s)", o.Alias, path)
+						out.Write(w, filtered, o.Map, filteredValues)
+					default:
+						return fmt.Errorf("unsupported output type %s", o.Type)
+					}
+
+					return nil
+				}()
+				if err != nil {
+					return err
 				}
 			}
 
