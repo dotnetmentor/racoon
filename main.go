@@ -69,9 +69,9 @@ func createApp() (*cli.App, config.AppContext) {
 			},
 		},
 		Commands: []*cli.Command{
-			command.Create(),
 			command.Export(),
 			command.Read(),
+			command.Write(),
 		},
 		Before: func(c *cli.Context) error {
 			l := c.String("loglevel")

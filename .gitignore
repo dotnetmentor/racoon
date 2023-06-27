@@ -5,3 +5,7 @@ output/*.json
 racoon.y*ml
 dist/
 .vscode/
+
+testdata/*
+./*local.env
+main_test.go

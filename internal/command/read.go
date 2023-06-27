@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dotnetmentor/racoon/internal/api"
+	"github.com/dotnetmentor/racoon/internal/visitor"
 	"github.com/urfave/cli/v2"
 )
 
@@ -23,17 +25,43 @@ func Read() *cli.Command {
 				return err
 			}
 
-			vs := ValueSource{
-				context:    ctx,
-				properties: make([]Property, 0),
+			visit := visitor.New(ctx)
+
+			err = visit.Init([]string{}, []string{key})
+			if err != nil {
+				return err
 			}
 
-			value, err := vs.ReadOne(key)
+			var value api.Value
+			err = visit.Property(func(p api.Property, err error) error {
+				if err != nil {
+					return err
+				}
+
+				val := p.Value()
+				if val == nil {
+					return fmt.Errorf("no value resolved for property %s", p.Name)
+				}
+
+				if val.Error() != nil {
+					return fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
+				}
+
+				if err := p.Validate(val); err != nil {
+					return err
+				}
+
+				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+
+				value = val
+				return nil
+			})
 			if err != nil {
 				return err
 			}
 
 			fmt.Printf("%s", value.Raw())
+
 			return nil
 		},
 	}

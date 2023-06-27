@@ -1,4 +1,4 @@
-package command
+package visitor
 
 import (
 	"fmt"
@@ -9,16 +9,25 @@ import (
 	"github.com/dotnetmentor/racoon/internal/store"
 )
 
-// TODO: Name this thing and move it to store?
-type ValueSource struct {
-	context    config.AppContext
-	properties api.PropertyList
-	layers     api.LayerList
-	store      *store.ValueStore
+func New(ctx config.AppContext) *Visitor {
+	v := &Visitor{
+		context:    ctx,
+		store:      store.NewValueStore(ctx),
+		properties: make(api.PropertyList, 0),
+		layers:     make(api.LayerList, 0),
+	}
+	return v
 }
 
-func (vs *ValueSource) Init(excludes, includes []string) error {
-	vs.context.Log.Debugf("loading properties")
+type Visitor struct {
+	context    config.AppContext
+	store      *store.ValueStore
+	properties api.PropertyList
+	layers     api.LayerList
+}
+
+func (vs *Visitor) Init(excludes, includes []string) error {
+	vs.context.Log.Debugf("initializing visitor")
 	implicit := config.PropertyList{}
 
 	base := api.NewLayer("base", []config.SourceType{}, true)
@@ -35,10 +44,15 @@ func (vs *ValueSource) Init(excludes, includes []string) error {
 		vs.layers = append(vs.layers, layer)
 	}
 
+	vs.context.Log.Debug("visitor initialized")
 	return nil
 }
 
-func (vs *ValueSource) Visit(action func(p api.Property, err error) error) error {
+func (vs *Visitor) Store() *store.ValueStore {
+	return vs.store
+}
+
+func (vs *Visitor) Property(action func(p api.Property, err error) error) error {
 	for _, p := range vs.properties {
 		vs.context.Log.Debugf("visiting property %s", p.Name)
 
@@ -51,7 +65,7 @@ func (vs *ValueSource) Visit(action func(p api.Property, err error) error) error
 	return nil
 }
 
-func (vs *ValueSource) loadProperties(layer *api.Layer, implicit, explicit config.PropertyList, sourceConfig config.SourceConfig) {
+func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.PropertyList, sourceConfig config.SourceConfig) {
 	vs.context.Log.Infof("processing layer %s", layer.Name)
 
 	if len(layer.ImplicitSources) > 0 {
@@ -158,7 +172,7 @@ func (vs *ValueSource) loadProperties(layer *api.Layer, implicit, explicit confi
 	}
 }
 
-func (vs *ValueSource) newProperty(name, description string, source string, sensitive bool, rules config.RuleConfig, formatting *config.FormattingConfig) (property api.Property, isNew bool) {
+func (vs *Visitor) newProperty(name, description string, source string, sensitive bool, rules config.RuleConfig, formatting *config.FormattingConfig) (property api.Property, isNew bool) {
 	property, isNew = api.NewProperty(vs.properties, name, description, source, sensitive, rules, formatting)
 	if isNew {
 		vs.properties = append(vs.properties, property)

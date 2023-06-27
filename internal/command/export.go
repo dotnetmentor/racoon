@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/output"
 	"github.com/dotnetmentor/racoon/internal/utils"
+	"github.com/dotnetmentor/racoon/internal/visitor"
 
 	"github.com/urfave/cli/v2"
 )
@@ -54,20 +56,54 @@ func Export() *cli.Command {
 			oa := c.String("alias")
 			p := c.String("path")
 
-			includes := c.StringSlice("include")
 			excludes := c.StringSlice("exclude")
+			includes := c.StringSlice("include")
 
 			if ot == "" && p != "" {
 				ctx.Log.Warn("the flag --path is not allowed without also specifying the --output flag")
 				return nil
 			}
 
-			vs := &ValueSource{
-				context:    ctx,
-				properties: make([]Property, 0),
+			visit := visitor.New(ctx)
+
+			keys := []string{}
+			values := map[string]api.Value{}
+
+			err = visit.Init(excludes, includes)
+			if err != nil {
+				return err
 			}
 
-			keys, values, err := vs.ReadAll(excludes, includes)
+			err = visit.Property(func(p api.Property, err error) error {
+				if err != nil {
+					return err
+				}
+
+				key := p.Name
+
+				if !utils.StringSliceContains(keys, key) {
+					keys = append(keys, key)
+				}
+
+				val := p.Value()
+				if val == nil {
+					return fmt.Errorf("no value resolved for property %s", p.Name)
+				}
+
+				if val.Error() != nil {
+					return fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
+				}
+
+				if err := p.Validate(val); err != nil {
+					return err
+				}
+
+				values[key] = val
+
+				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+
+				return nil
+			})
 			if err != nil {
 				return err
 			}
@@ -96,7 +132,7 @@ func Export() *cli.Command {
 				}
 
 				if ot == "" && path == "-" {
-					ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s", o.Type)
+					ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s (alias=%s)", o.Type, o.Alias)
 					continue
 				}
 
@@ -113,12 +149,12 @@ func Export() *cli.Command {
 					switch o.Export {
 					case config.ExportTypeClearText:
 						switch values[s].(type) {
-						case *SensitiveValue:
+						case *api.SensitiveValue:
 							continue
 						}
 					case config.ExportTypeSensitive:
 						switch values[s].(type) {
-						case *ClearTextValue:
+						case *api.ClearTextValue:
 							continue
 						}
 					}

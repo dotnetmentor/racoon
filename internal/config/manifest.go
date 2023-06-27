@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/dotnetmentor/racoon/internal/output"
 	"github.com/dotnetmentor/racoon/internal/utils"
@@ -59,7 +60,7 @@ func NewManifest(paths []string) (Manifest, error) {
 		return Manifest{}, fmt.Errorf("failed to parse manifest yaml. %v", err)
 	}
 
-	// TODO: validate manifest config
+	// TODO: Validate manifest config
 
 	return m, nil
 }
@@ -194,17 +195,17 @@ type OverrideConfig struct {
 }
 
 type PropertyValueFrom struct {
-	Parameter         *string                           `yaml:"parameter,omitempty"`
-	Literal           *string                           `yaml:"literal,omitempty"`
-	Environment       *ValueFromEvnironment             `yaml:"env,omitempty"`
-	AwsParameterStore *ValueFromAwsParameterStoreConfig `yaml:"awsParameterStore,omitempty"`
+	Parameter         *string                     `yaml:"parameter,omitempty"`
+	Literal           *string                     `yaml:"literal,omitempty"`
+	Environment       *ValueFromEvnironment       `yaml:"env,omitempty"`
+	AwsParameterStore *ValueFromAwsParameterStore `yaml:"awsParameterStore,omitempty"`
 }
 
 type ValueFromEvnironment struct {
 	Key string `yaml:"key,omitempty"`
 }
 
-type ValueFromAwsParameterStoreConfig struct {
+type ValueFromAwsParameterStore struct {
 	Key string `yaml:"key"`
 }
 
@@ -229,13 +230,25 @@ func (m *Manifest) GetLayers(ctx AppContext) (layers []LayerConfig) {
 	return
 }
 
-func (l *LayerConfig) Matches(p map[string]string) bool {
-	for pk, pv := range p {
-		if lv, ok := l.Match[pk]; ok && lv == pv {
-			return true
+func (l *LayerConfig) Matches(p Parameters) bool {
+	// TODO: Log matching attempts
+	for lpk, lpv := range l.Match {
+		if pv, ok := p[lpk]; ok {
+			matched, err := regexp.MatchString(lpv, pv)
+			if err != nil {
+				// TODO: Log error
+				if lpv == pv {
+					return true
+				}
+			}
+			if !matched {
+				return false
+			}
+		} else {
+			return false
 		}
 	}
-	return false
+	return true
 }
 
 func (o *OutputConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
