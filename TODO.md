@@ -26,6 +26,7 @@
 - [x] Remove "current value" from prompt for new values (write command)
 - [x] Bug, do not ask about preview twice (when using write command)
 - [x] Bug, when setting new value, never allow log of sensitive value
+- [x] Parameter validation (regex)
 
 - [ ] (in-progress) Initial round of real world testing
 - [ ] Get test cases working again
@@ -37,7 +38,7 @@
 - [ ] Validation options: Value type (Int, String, Bool etc)
 - [ ] Validation options: Value match Regexp (.\*)
 - [ ] Validate that ImplicitSources list is unique
-- [ ] Parameter validation (minLength: 3, maxLength: 16 etc)
+- [ ] Parameter validation (minLength: 3, maxLength: 16 etc, type: string|number|...)
 - [ ] New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
 - [ ] Caching for sources during a single run
 - [ ] Allow layers to be defined in separate files
@@ -48,3 +49,4 @@
 - [ ] Option to sort output keys (dotenv)
 - [ ] Make formatting rules a list to get predictable order
 - [ ] Add support for regexReplace (regexReplace: "/demo-\*//")
+- [ ] Feature: run export with --watch to have racoon running in the background, watching for changes

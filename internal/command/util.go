@@ -1,8 +1,6 @@
 package command
 
 import (
-	"fmt"
-
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -34,20 +32,8 @@ func getContext(c *cli.Context) (config.AppContext, error) {
 		ctx.Log.Exit(1)
 	}
 
-	// validate parameters are defined by manifest
-	for k := range p {
-		if _, ok := ctx.Manifest.Config.Parameters[k]; !ok {
-			return ctx, fmt.Errorf("parameter %s, provided but not defined", k)
-		}
-	}
-
-	// validate required parameters
-	for k, v := range ctx.Manifest.Config.Parameters {
-		if v.Required {
-			if _, ok := p[k]; !ok {
-				return ctx, fmt.Errorf("required parameter must be set, parameter: %s", k)
-			}
-		}
+	if err := p.ValidateParams(ctx.Manifest.Config.Parameters); err != nil {
+		return ctx, err
 	}
 
 	ctx.Parameters = p

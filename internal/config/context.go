@@ -20,8 +20,6 @@ type AppContext struct {
 	Parameters Parameters
 }
 
-type Parameters map[string]string
-
 func NewContext(paths ...string) (AppContext, error) {
 	l := logrus.New()
 	l.Formatter = &PrefixedTextFormatter{

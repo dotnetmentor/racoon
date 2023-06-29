@@ -126,7 +126,8 @@ func (l PropertyList) Remove(pl PropertyList) (properties PropertyList) {
 type ParameterConfig map[string]ParameterRule
 
 type ParameterRule struct {
-	Required bool `yaml:"required"`
+	Required bool   `yaml:"required"`
+	Regexp   string `yaml:"regexp"`
 }
 
 type SourceConfig struct {
