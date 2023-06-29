@@ -27,19 +27,19 @@
 - [x] Bug, do not ask about preview twice (when using write command)
 - [x] Bug, when setting new value, never allow log of sensitive value
 - [x] Parameter validation (regex)
+- [x] Basic test cases
 
 - [ ] (in-progress) Initial round of real world testing
-- [ ] Get test cases working again
 - [ ] Allow writing to writable sources defined by formatting config
 
 - [ ] Warn about trying to "redefine" rules of a property
 - [ ] Warn about finding value for property that does not allow implicit overrides
 - [ ] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
+- [ ] New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
 - [ ] Validation options: Value type (Int, String, Bool etc)
 - [ ] Validation options: Value match Regexp (.\*)
 - [ ] Validate that ImplicitSources list is unique
 - [ ] Parameter validation (minLength: 3, maxLength: 16 etc, type: string|number|...)
-- [ ] New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
 - [ ] Caching for sources during a single run
 - [ ] Allow layers to be defined in separate files
 - [ ] Use config.sources as a way to enable the use of a source (if not specified, then it's not enabled)?
@@ -50,3 +50,4 @@
 - [ ] Make formatting rules a list to get predictable order
 - [ ] Add support for regexReplace (regexReplace: "/demo-\*//")
 - [ ] Feature: run export with --watch to have racoon running in the background, watching for changes
+- [ ] More tests on multiple levels and components (e2e, unit etc)

@@ -1,0 +1,6 @@
+ASPNETCORE_CONFIG=live
+ASPNETCORE_ENVIRONMENT=prod
+TENANT=default
+SENDGRID_API_KEY=apikey-secret-value
+PDF_URL=https://pdf.prod.domain.net/api
+WEBHOOK_BASE_URL=
