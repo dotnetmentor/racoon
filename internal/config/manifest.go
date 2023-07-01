@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	SourceTypeNotSet            SourceType = "unknown"
 	SourceTypeAwsParameterStore SourceType = "awsParameterStore"
 	SourceTypeEnvironment       SourceType = "env"
 	SourceTypeLiteral           SourceType = "literal"
@@ -173,7 +174,7 @@ type PropertyConfig struct {
 	Default     *string            `yaml:"default,omitempty"`
 	Sensitive   bool               `yaml:"sensitive,omitempty"`
 	Source      *PropertyValueFrom `yaml:"source,omitempty"`
-	Format      *FormattingConfig  `yaml:"format,omitempty"`
+	Format      []FormattingConfig `yaml:"format,omitempty"`
 	Rules       RuleConfig         `yaml:"rules"`
 }
 
@@ -199,7 +200,9 @@ func (s *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 }
 
 type FormattingConfig struct {
-	Replace map[string]*PropertyValueFrom `yaml:"replace"`
+	Replace       *string            `yaml:"replace,omitempty"`
+	RegexpReplace *string            `yaml:"regexpReplace,omitempty"`
+	Source        *PropertyValueFrom `yaml:"source,omitempty"`
 }
 
 type RuleConfig struct {
@@ -216,11 +219,33 @@ type OverrideConfig struct {
 	AllowExplicit bool `yaml:"allowExplicit"`
 }
 
+// TODO: Rename
 type PropertyValueFrom struct {
 	Parameter         *string                     `yaml:"parameter,omitempty"`
 	Literal           *string                     `yaml:"literal,omitempty"`
 	Environment       *ValueFromEvnironment       `yaml:"env,omitempty"`
 	AwsParameterStore *ValueFromAwsParameterStore `yaml:"awsParameterStore,omitempty"`
+}
+
+func (s *PropertyValueFrom) SourceType() SourceType {
+	if s != nil {
+		if s.Parameter != nil {
+			return SourceTypeParameter
+		}
+
+		if s.Literal != nil {
+			return SourceTypeLiteral
+		}
+
+		if s.Environment != nil {
+			return SourceTypeEnvironment
+		}
+
+		if s.AwsParameterStore != nil {
+			return SourceTypeAwsParameterStore
+		}
+	}
+	return SourceTypeNotSet
 }
 
 type ValueFromEvnironment struct {
@@ -245,32 +270,44 @@ type OutputConfig struct {
 
 func (m *Manifest) GetLayers(ctx AppContext) (layers []LayerConfig) {
 	for _, l := range m.Layers {
-		if l.Matches(ctx.Parameters) {
+		if l.Matches(ctx.Parameters, ctx) {
 			layers = append(layers, l)
 		}
 	}
 	return
 }
 
-func (l *LayerConfig) Matches(p Parameters) bool {
-	// TODO: Log matching attempts
+func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool) {
 	for lpk, lpv := range l.Match {
 		if pv, ok := p[lpk]; ok {
 			matched, err := regexp.MatchString(lpv, pv)
 			if err != nil {
-				// TODO: Log error
 				if lpv == pv {
-					return true
+					ctx.Log.Warnf("parameter matched exactly but had an error matching regexp, err: %v", err)
+					match = true
+					continue
 				}
+				ctx.Log.Errorf("parameter matching error, err: %v", err)
 			}
 			if !matched {
-				return false
+				match = false
+				break
 			}
+			match = true
+			continue
 		} else {
-			return false
+			match = false
+			break
 		}
 	}
-	return true
+
+	if match {
+		ctx.Log.Debugf("matched layer %s against parameters (conditions=%v parameters=%v)", l.Name, l.Match, p)
+	} else {
+		ctx.Log.Debugf("layer %s did not match parameters (conditions=%v parameters=%v)", l.Name, l.Match, p)
+	}
+
+	return match
 }
 
 func (o *OutputConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {

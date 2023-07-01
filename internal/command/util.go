@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func getContext(c *cli.Context) (config.AppContext, error) {
+func newContext(c *cli.Context) (config.AppContext, error) {
 	paths := config.DefaultManifestYamlFiles
 	manifest := c.String("manifest")
 	if manifest != "" {

@@ -1,6 +1,10 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/ttacon/chalk"
+)
 
 func NewValue(source ValueSource, key string, val string, err error, sensitive bool) Value {
 	if sensitive {
@@ -74,7 +78,10 @@ func (v *SensitiveValue) Error() error {
 
 func (v *SensitiveValue) String() string {
 	if v.err != nil && IsNotFoundError(v.err) {
-		return "<not found>"
+		return fmt.Sprintf("%s%s%s", chalk.Yellow, "<not found>", chalk.ResetColor)
+	}
+	if v.err != nil {
+		return fmt.Sprintf("%s%s%s", chalk.Red, "<error>", chalk.ResetColor)
 	}
 	return "<sensitive>"
 }
@@ -112,7 +119,10 @@ func (v *ClearTextValue) Error() error {
 
 func (v *ClearTextValue) String() string {
 	if v.err != nil && IsNotFoundError(v.err) {
-		return "<not found>"
+		return fmt.Sprintf("%s%s%s", chalk.Yellow, "<not found>", chalk.ResetColor)
+	}
+	if v.err != nil {
+		return fmt.Sprintf("%s%s%s", chalk.Red, "<error>", chalk.ResetColor)
 	}
 	if len(v.raw) == 0 {
 		return "<empty>"

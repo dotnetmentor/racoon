@@ -55,8 +55,8 @@ layers:
         source:
           literal: https://pdf.{context}.domain.net/api
         format:
-          replace:
-            context:
+          - replace: context
+            source:
               parameter: context
 
   - name: development-config
@@ -87,11 +87,12 @@ layers:
         source:
           literal: https://pdf.{tenant}.{context}.domain.net/api
         format:
-          replace:
-            tenant:
-              parameter: tenant
-            context:
+          - replace: context
+            source:
               parameter: context
+          - replace: tenant
+            source:
+              parameter: tenant
       - name: SendgridApiKey
         source:
           awsParameterStore:

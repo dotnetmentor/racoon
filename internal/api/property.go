@@ -6,7 +6,7 @@ import (
 	"github.com/dotnetmentor/racoon/internal/config"
 )
 
-func NewProperty(properties PropertyList, name, description, source string, sensitive bool, rules config.RuleConfig, formatting *config.FormattingConfig) (property Property, isNew bool) {
+func NewProperty(properties PropertyList, name, description, source string, sensitive bool, rules config.RuleConfig, formatting []config.FormattingConfig) (property Property, isNew bool) {
 	property = Property{
 		Name:        name,
 		Description: description,
@@ -45,7 +45,7 @@ type Property struct {
 	values     ValueList
 	sensitive  bool
 	rules      config.RuleConfig
-	formatting *config.FormattingConfig
+	formatting []config.FormattingConfig
 }
 
 func (p *Property) Value() Value {
@@ -99,8 +99,17 @@ func (p Property) Rules() config.RuleConfig {
 	return p.rules
 }
 
-func (p Property) Formatting() *config.FormattingConfig {
+func (p Property) Formatting() []config.FormattingConfig {
 	return p.formatting
+}
+
+func (p Property) WritableFormatters() (writable []config.FormattingConfig) {
+	for _, fc := range p.Formatting() {
+		if SourceType(fc.Source.SourceType()).Writable() {
+			writable = append(writable, fc)
+		}
+	}
+	return
 }
 
 func (p Property) Validate(v Value) error {

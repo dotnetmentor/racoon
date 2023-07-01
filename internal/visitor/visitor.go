@@ -2,7 +2,6 @@ package visitor
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
@@ -30,16 +29,16 @@ func (vs *Visitor) Init(excludes, includes []string) error {
 	vs.context.Log.Debugf("initializing visitor")
 	implicit := config.PropertyList{}
 
-	base := api.NewLayer("base", []config.SourceType{}, true)
+	base := api.NewLayer("base", []config.SourceType{}, vs.context.Manifest.Config.Sources, true)
 	explicit := vs.context.Manifest.Properties.Filter(excludes, includes)
-	vs.loadProperties(&base, implicit, explicit, vs.context.Manifest.Config.Sources)
+	vs.loadProperties(&base, implicit, explicit)
 	implicit = explicit.Merge(implicit)
 	vs.layers = append(vs.layers, base)
 
 	for _, l := range vs.context.Manifest.GetLayers(vs.context) {
-		layer := api.NewLayer(l.Name, l.ImplicitSources, false)
+		layer := api.NewLayer(l.Name, l.ImplicitSources, l.Config, false)
 		explicit := l.Properties.Filter(excludes, includes)
-		vs.loadProperties(&layer, implicit, explicit, l.Config)
+		vs.loadProperties(&layer, implicit, explicit)
 		implicit = explicit.Merge(implicit)
 		vs.layers = append(vs.layers, layer)
 	}
@@ -52,12 +51,11 @@ func (vs *Visitor) Store() *store.ValueStore {
 	return vs.store
 }
 
-func (vs *Visitor) Property(action func(p api.Property, err error) error) error {
-	for _, p := range vs.properties {
-		vs.context.Log.Debugf("visiting property %s", p.Name)
+func (vs *Visitor) Layer(action func(l api.Layer, err error) (bool, error)) error {
+	for _, l := range vs.layers {
+		vs.context.Log.Debugf("visiting layer %s", l.Name)
 
-		err := vs.layers.ResolveValue(&p)
-		if err := action(p, err); err != nil {
+		if ok, err := action(l, nil); !ok || err != nil {
 			return err
 		}
 	}
@@ -65,7 +63,20 @@ func (vs *Visitor) Property(action func(p api.Property, err error) error) error 
 	return nil
 }
 
-func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.PropertyList, sourceConfig config.SourceConfig) {
+func (vs *Visitor) Property(action func(p api.Property, err error) (bool, error)) error {
+	for _, p := range vs.properties {
+		vs.context.Log.Debugf("visiting property %s", p.Name)
+
+		err := vs.layers.ResolveValue(&p)
+		if ok, err := action(p, err); !ok || err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.PropertyList) {
 	vs.context.Log.Infof("processing layer %s", layer.Name)
 
 	if len(layer.ImplicitSources) > 0 {
@@ -95,7 +106,7 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 				}
 
 				if valueSource != nil {
-					val := vs.store.Read(*layer, prop.Name, prop.Sensitive(), valueSource, sourceConfig)
+					val := vs.store.Read(*layer, prop.Name, prop.Sensitive(), valueSource, layer.Config)
 					if val != nil {
 						prop.SetValue(val)
 					}
@@ -122,32 +133,30 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 		}
 
 		if p.Source != nil {
-			val := vs.store.Read(*layer, prop.Name, prop.Sensitive(), p.Source, sourceConfig)
+			val := vs.store.Read(*layer, prop.Name, prop.Sensitive(), p.Source, layer.Config)
 			if val != nil {
 				prop.SetValue(val)
 			}
 		}
 
 		val := prop.Value()
-		if prop.Formatting() != nil && val != nil {
+		if len(prop.Formatting()) > 0 && val != nil {
 			vs.context.Log.Debugf("formatting value for %s, format: %s", prop.Name, val.String())
 
-			errs := make([]*api.FormattingError, 0)
 			str := val.Raw()
+			errs := make([]*api.FormattingError, 0)
 			forceSensitive := prop.Sensitive()
-			for k, v := range prop.Formatting().Replace {
-				fval := vs.store.Read(*layer, k, prop.Sensitive(), v, sourceConfig)
-				rkey := fmt.Sprintf("{%s}", k)
+
+			for _, fc := range prop.Formatting() {
+				f := api.NewFormatter(fc, vs.context.Log)
+				k := f.FormattingKey()
+
+				fval := vs.store.Read(*layer, k, prop.Sensitive(), fc.Source, layer.Config)
 				if fval != nil {
 					if fval.Error() != nil {
-						vs.context.Log.Debugf("failed to read %s value from %s, used to format %s, err: %v", k, fval.Source(), prop.String(), fval.Error())
-						errs = append(errs, api.NewFormattingError(fmt.Sprintf("failed to read %s value from %s, used to format %s, err: %v", k, fval.Source(), prop.String(), fval.Error())))
-						continue
-					}
-
-					if fval.Raw() == "" {
-						vs.context.Log.Debugf("failed to read %s value from %s, used to format %s, err: empty value not allowed", k, prop.String(), fval.Source())
-						errs = append(errs, api.NewFormattingError(fmt.Sprintf("failed to read %s value from %s, used to format %s, err: empty value not allowed", k, prop.String(), fval.Source())))
+						msg := fmt.Sprintf("failed to read %s value from %s, used to format %s, err: %v", k, fval.Source(), prop.String(), fval.Error())
+						vs.context.Log.Debugln(msg)
+						errs = append(errs, api.NewFormattingError(msg))
 						continue
 					}
 
@@ -155,8 +164,17 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 						forceSensitive = true
 					}
 
-					str = strings.ReplaceAll(str, rkey, fval.Raw())
-					vs.context.Log.Debugf("replaced %s with value: %s", rkey, fval.String())
+					vs.context.Log.Debugf("applying formatter for %s using value %s (source=%s formatter=%s)", prop.Name, fval.String(), fval.Source().Type(), f.String())
+					res, err := f.Apply(str, fval)
+					// TODO: Verify sensitive values can't be part of the error string
+					if err != nil {
+						msg := fmt.Sprintf("failed to apply formatting for %s using %T, err: %v", k, f, err)
+						vs.context.Log.Debugln(msg)
+						errs = append(errs, api.NewFormattingError(msg))
+						continue
+					}
+
+					str = res
 				} else {
 					vs.context.Log.Debugf("failed to read %s value, used to format %s, err: no value received", k, prop.String())
 					errs = append(errs, api.NewFormattingError(fmt.Sprintf("failed to read %s value, used to format %s, err: no value received", k, prop.String())))
@@ -172,7 +190,7 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 	}
 }
 
-func (vs *Visitor) newProperty(name, description string, source string, sensitive bool, rules config.RuleConfig, formatting *config.FormattingConfig) (property api.Property, isNew bool) {
+func (vs *Visitor) newProperty(name, description string, source string, sensitive bool, rules config.RuleConfig, formatting []config.FormattingConfig) (property api.Property, isNew bool) {
 	property, isNew = api.NewProperty(vs.properties, name, description, source, sensitive, rules, formatting)
 	if isNew {
 		vs.properties = append(vs.properties, property)

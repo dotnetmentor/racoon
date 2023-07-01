@@ -38,7 +38,7 @@ func (s *AwsParameterStore) Read(ctx config.AppContext, layer api.Layer, key str
 		return api.NewValue(api.NewValueSource(layer, api.SourceTypeAwsParameterStore), "", "", missingKeyError(), sensitive || sourceConfig.ForceSensitive)
 	}
 
-	psk := awpParameterStoreKey(config.ReplaceParams(pskf, ctx.Parameters), key)
+	psk := awpParameterStoreKey(ctx.Parameters.Replace(pskf), key)
 	ctx.Log.Debugf("reading %s from %s", psk, config.SourceTypeAwsParameterStore)
 	out, err := s.client.GetParameter(ctx.Context, &ssm.GetParameterInput{
 		Name:           &psk,

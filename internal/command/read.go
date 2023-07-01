@@ -20,7 +20,7 @@ func Read() *cli.Command {
 			}
 			key := strings.TrimSpace(c.Args().First())
 
-			ctx, err := getContext(c)
+			ctx, err := newContext(c)
 			if err != nil {
 				return err
 			}
@@ -33,22 +33,22 @@ func Read() *cli.Command {
 			}
 
 			var value api.Value
-			err = visit.Property(func(p api.Property, err error) error {
+			err = visit.Property(func(p api.Property, err error) (bool, error) {
 				if err != nil {
-					return err
+					return false, err
 				}
 
 				val := p.Value()
 				if val == nil {
-					return fmt.Errorf("no value resolved for property %s", p.Name)
+					return false, fmt.Errorf("no value resolved for property %s", p.Name)
 				}
 
 				if val.Error() != nil {
-					return fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
+					return false, fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
 				}
 
 				if err := p.Validate(val); err != nil {
-					return err
+					return false, err
 				}
 
 				value = val
@@ -62,7 +62,7 @@ func Read() *cli.Command {
 					}
 				}
 
-				return nil
+				return true, nil
 			})
 			if err != nil {
 				return err

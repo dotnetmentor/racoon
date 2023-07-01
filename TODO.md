@@ -17,7 +17,7 @@
 - [x] How do we express that an empty value is OK for a property? (use default: ""?)
 - [x] Allow output filter (all, sensitive, cleartext)
 - [x] Re-implement read command
-- [x] Basic layer regex matching
+- [x] Basic layer regexp matching
 - [x] Re-implement create command (renamed to write)
 - [x] General refactor
 - [x] Resolve important TODO's in code
@@ -26,11 +26,12 @@
 - [x] Remove "current value" from prompt for new values (write command)
 - [x] Bug, do not ask about preview twice (when using write command)
 - [x] Bug, when setting new value, never allow log of sensitive value
-- [x] Parameter validation (regex)
+- [x] Parameter validation (regexp)
 - [x] Basic test cases
+- [x] Add support for regexpReplace (regexpReplace: "/demo-\*//")
+- [x] Allow writing fortatter sources as defined by formatting config
 
 - [ ] (in-progress) Initial round of real world testing
-- [ ] Allow writing to writable sources defined by formatting config
 
 - [ ] Warn about trying to "redefine" rules of a property
 - [ ] Warn about finding value for property that does not allow implicit overrides
@@ -48,6 +49,5 @@
 - [ ] Allow enforcing senitive values can't be written to unsafe store
 - [ ] Option to sort output keys (dotenv)
 - [ ] Make formatting rules a list to get predictable order
-- [ ] Add support for regexReplace (regexReplace: "/demo-\*//")
 - [ ] Feature: run export with --watch to have racoon running in the background, watching for changes
 - [ ] More tests on multiple levels and components (e2e, unit etc)

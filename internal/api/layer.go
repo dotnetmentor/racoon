@@ -4,11 +4,12 @@ import (
 	"github.com/dotnetmentor/racoon/internal/config"
 )
 
-func NewLayer(name string, implicitSources []config.SourceType, baseLayer bool) Layer {
+func NewLayer(name string, implicitSources []config.SourceType, sourceConfig config.SourceConfig, baseLayer bool) Layer {
 	l := Layer{
 		Name:            name,
 		Properties:      make([]Property, 0),
 		ImplicitSources: implicitSources,
+		Config:          sourceConfig,
 		baseLayer:       baseLayer,
 	}
 	return l
@@ -30,8 +31,9 @@ func (ls LayerList) ResolveValue(p *Property) (err error) {
 
 type Layer struct {
 	Name            string
-	ImplicitSources []config.SourceType
 	Properties      PropertyList
+	ImplicitSources []config.SourceType
+	Config          config.SourceConfig
 	baseLayer       bool
 }
 

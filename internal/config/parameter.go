@@ -11,10 +11,15 @@ type Parameters map[string]string
 func ParseParams(ls []string) (Parameters, error) {
 	p := Parameters{}
 	for _, l := range ls {
-		parts := strings.Split(l, "=")
-		// TODO: Error handling for flag value parsing
+		parts := strings.SplitN(l, "=", 2)
+		if len(parts) != 2 {
+			return p, fmt.Errorf("invalid parameter format %s, value must conform to <key>=<value>, parts: %v", l, parts)
+		}
 		lk := parts[0]
 		lv := parts[1]
+		if len(lk) < 1 {
+			return p, fmt.Errorf("invalid parameter %s, key must not be empty", l)
+		}
 		p[lk] = lv
 	}
 	return p, nil
@@ -53,4 +58,11 @@ func (p Parameters) ValidateParams(c ParameterConfig) error {
 	}
 
 	return nil
+}
+
+func (p Parameters) Replace(s string) string {
+	for k, v := range p {
+		s = strings.ReplaceAll(s, fmt.Sprintf("{%s}", k), v)
+	}
+	return s
 }

@@ -46,7 +46,7 @@ func Export() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			ctx, err := getContext(c)
+			ctx, err := newContext(c)
 			if err != nil {
 				return err
 			}
@@ -74,9 +74,9 @@ func Export() *cli.Command {
 				return err
 			}
 
-			err = visit.Property(func(p api.Property, err error) error {
+			err = visit.Property(func(p api.Property, err error) (bool, error) {
 				if err != nil {
-					return err
+					return false, err
 				}
 
 				key := p.Name
@@ -87,15 +87,15 @@ func Export() *cli.Command {
 
 				val := p.Value()
 				if val == nil {
-					return fmt.Errorf("no value resolved for property %s", p.Name)
+					return false, fmt.Errorf("no value resolved for property %s", p.Name)
 				}
 
 				if val.Error() != nil {
-					return fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
+					return false, fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
 				}
 
 				if err := p.Validate(val); err != nil {
-					return err
+					return false, err
 				}
 
 				values[key] = val
@@ -109,7 +109,7 @@ func Export() *cli.Command {
 					}
 				}
 
-				return nil
+				return true, nil
 			})
 			if err != nil {
 				return err
@@ -206,7 +206,7 @@ func Export() *cli.Command {
 			}
 
 			if ot != "" && !outputMatched {
-				return fmt.Errorf("unknown output type %s", ot)
+				return fmt.Errorf("unknown output (type=%s alias=%s)", ot, oa)
 			}
 
 			return nil
