@@ -30,6 +30,7 @@
 - [x] Basic test cases
 - [x] Add support for regexpReplace (regexpReplace: "/demo-\*//")
 - [x] Allow writing fortatter sources as defined by formatting config
+- [x] Allow specifying <not-found> value to be treated as error by source (only AwsParameterStore supported at the moment)
 
 - [ ] (in-progress) Initial round of real world testing
 
@@ -44,7 +45,6 @@
 - [ ] Caching for sources during a single run
 - [ ] Allow layers to be defined in separate files
 - [ ] Use config.sources as a way to enable the use of a source (if not specified, then it's not enabled)?
-- [ ] How do we express that an empty value is OK for a source? Do we? (Using validation field on property?)
 - [ ] Allow generating values to help with seeding the store
 - [ ] Allow enforcing senitive values can't be written to unsafe store
 - [ ] Option to sort output keys (dotenv)

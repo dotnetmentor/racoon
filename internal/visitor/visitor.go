@@ -91,14 +91,14 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 			for _, s := range layer.ImplicitSources {
 				vs.context.Log.Debugf("processing implicit property %s, reading from source %s", prop.Name, s)
 
-				var valueSource *config.PropertyValueFrom = nil
+				var valueSource *config.ValueSourceConfig = nil
 				switch s {
 				case config.SourceTypeAwsParameterStore:
-					valueSource = &config.PropertyValueFrom{
+					valueSource = &config.ValueSourceConfig{
 						AwsParameterStore: &config.ValueFromAwsParameterStore{},
 					}
 				case config.SourceTypeEnvironment:
-					valueSource = &config.PropertyValueFrom{
+					valueSource = &config.ValueSourceConfig{
 						Environment: &config.ValueFromEvnironment{},
 					}
 				default:

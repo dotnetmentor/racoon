@@ -20,7 +20,7 @@ type ValueStore struct {
 	environment       *Environment
 }
 
-func (vs *ValueStore) Read(layer api.Layer, key string, sensitive bool, source *config.PropertyValueFrom, sourceConfig config.SourceConfig) api.Value {
+func (vs *ValueStore) Read(layer api.Layer, key string, sensitive bool, source *config.ValueSourceConfig, sourceConfig config.SourceConfig) api.Value {
 	m := vs.context.Manifest
 
 	switch source.SourceType() {

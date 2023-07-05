@@ -33,7 +33,7 @@ func NewFormatter(f config.FormattingConfig, log *logrus.Logger) ValueFormatter 
 
 type ValueFormatter interface {
 	FormattingKey() string
-	Source() *config.PropertyValueFrom
+	Source() *config.ValueSourceConfig
 	Apply(format string, val Value) (str string, err error)
 	String() string
 }
@@ -41,14 +41,14 @@ type ValueFormatter interface {
 type baseFormatter struct {
 	log    *logrus.Logger
 	key    string
-	source *config.PropertyValueFrom
+	source *config.ValueSourceConfig
 }
 
 func (f baseFormatter) FormattingKey() string {
 	return f.key
 }
 
-func (f baseFormatter) Source() *config.PropertyValueFrom {
+func (f baseFormatter) Source() *config.ValueSourceConfig {
 	return f.source
 }
 

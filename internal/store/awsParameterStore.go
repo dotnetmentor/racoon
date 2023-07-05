@@ -49,6 +49,14 @@ func (s *AwsParameterStore) Read(ctx config.AppContext, layer api.Layer, key str
 		if !errors.As(err, &notFound) {
 			return api.NewValue(api.NewValueSource(layer, api.SourceTypeAwsParameterStore), psk, "", err, sensitive || sourceConfig.ForceSensitive)
 		} else {
+			treatAsError := sourceConfig.TreatNotFoundAsError
+			if propertySource.TreatNotFoundAsError != nil {
+				treatAsError = *propertySource.TreatNotFoundAsError
+			}
+			if treatAsError {
+				ctx.Log.Errorf("%s not found in %s, configured to be treated as an error", psk, config.SourceTypeAwsParameterStore)
+				return api.NewValue(api.NewValueSource(layer, api.SourceTypeAwsParameterStore), psk, "", fmt.Errorf("%s not found in %s, configured to be treated as an error, %s", psk, config.SourceTypeAwsParameterStore, notFound), sensitive || sourceConfig.ForceSensitive)
+			}
 			ctx.Log.Debugf("%s not found in %s", psk, config.SourceTypeAwsParameterStore)
 			return api.NewValue(api.NewValueSource(layer, api.SourceTypeAwsParameterStore), psk, "", api.NewNotFoundError(notFound, psk, api.SourceTypeAwsParameterStore), sensitive || sourceConfig.ForceSensitive)
 		}
@@ -113,7 +121,7 @@ func camelCaseSplitToLowerJoinBySlashAndUnderscore(name string) (key string) {
 func missingKeyError() error {
 	m := config.Manifest{}
 	p := config.PropertyConfig{
-		Source: &config.PropertyValueFrom{
+		Source: &config.ValueSourceConfig{
 			AwsParameterStore: &config.ValueFromAwsParameterStore{},
 		},
 	}

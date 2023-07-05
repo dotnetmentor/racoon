@@ -27,6 +27,18 @@ const (
 	ExportTypeClearText ExportType = "cleartext"
 )
 
+var (
+	DefaultPropertyRules RuleConfig = RuleConfig{
+		Validation: ValidationRuleConfig{
+			AllowEmpty: false,
+		},
+		Override: OverrideRuleConfig{
+			AllowImplicit: true,
+			AllowExplicit: true,
+		},
+	}
+)
+
 type SourceType string
 
 type OutputType string
@@ -137,16 +149,22 @@ type SourceConfig struct {
 }
 
 type AwsParameterStoreConfig struct {
-	ForceSensitive bool   `yaml:"forceSensitive"`
-	KmsKey         string `yaml:"kmsKey"`
-	DefaultKey     string `yaml:"defaultKey"`
+	DefaultKey           string `yaml:"defaultKey"`
+	KmsKey               string `yaml:"kmsKey"`
+	ForceSensitive       bool   `yaml:"forceSensitive"`
+	TreatNotFoundAsError bool   `yaml:"treatNotFoundAsError"`
 }
 
 func (c AwsParameterStoreConfig) Merge(config AwsParameterStoreConfig) AwsParameterStoreConfig {
 	nc := AwsParameterStoreConfig{
-		ForceSensitive: c.ForceSensitive,
-		KmsKey:         c.KmsKey,
-		DefaultKey:     c.DefaultKey,
+		DefaultKey:           c.DefaultKey,
+		ForceSensitive:       c.ForceSensitive,
+		KmsKey:               c.KmsKey,
+		TreatNotFoundAsError: c.TreatNotFoundAsError,
+	}
+
+	if len(config.DefaultKey) > 0 && nc.DefaultKey != config.DefaultKey {
+		nc.DefaultKey = config.DefaultKey
 	}
 
 	if config.ForceSensitive {
@@ -157,8 +175,8 @@ func (c AwsParameterStoreConfig) Merge(config AwsParameterStoreConfig) AwsParame
 		nc.KmsKey = config.KmsKey
 	}
 
-	if len(config.DefaultKey) > 0 && nc.DefaultKey != config.DefaultKey {
-		nc.DefaultKey = config.DefaultKey
+	if config.TreatNotFoundAsError {
+		nc.TreatNotFoundAsError = true
 	}
 
 	return nc
@@ -173,7 +191,7 @@ type PropertyConfig struct {
 	Description string             `yaml:"description"`
 	Default     *string            `yaml:"default,omitempty"`
 	Sensitive   bool               `yaml:"sensitive,omitempty"`
-	Source      *PropertyValueFrom `yaml:"source,omitempty"`
+	Source      *ValueSourceConfig `yaml:"source,omitempty"`
 	Format      []FormattingConfig `yaml:"format,omitempty"`
 	Rules       RuleConfig         `yaml:"rules"`
 }
@@ -181,14 +199,9 @@ type PropertyConfig struct {
 func (s *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	type rawConfig PropertyConfig
 
-	// Put defaults here
+	// Change defaults in DefaultPropertyRules
 	raw := rawConfig{
-		Rules: RuleConfig{
-			Override: OverrideConfig{
-				AllowImplicit: true,
-				AllowExplicit: true,
-			},
-		},
+		Rules: DefaultPropertyRules,
 	}
 
 	if err := unmarshal(&raw); err != nil {
@@ -202,32 +215,31 @@ func (s *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error 
 type FormattingConfig struct {
 	Replace       *string            `yaml:"replace,omitempty"`
 	RegexpReplace *string            `yaml:"regexpReplace,omitempty"`
-	Source        *PropertyValueFrom `yaml:"source,omitempty"`
+	Source        *ValueSourceConfig `yaml:"source,omitempty"`
 }
 
 type RuleConfig struct {
-	Validation ValidationConfig `yaml:"validation"`
-	Override   OverrideConfig   `yaml:"override"`
+	Validation ValidationRuleConfig `yaml:"validation"`
+	Override   OverrideRuleConfig   `yaml:"override"`
 }
 
-type ValidationConfig struct {
+type ValidationRuleConfig struct {
 	AllowEmpty bool `yaml:"allowEmpty"`
 }
 
-type OverrideConfig struct {
+type OverrideRuleConfig struct {
 	AllowImplicit bool `yaml:"allowImplicit"`
 	AllowExplicit bool `yaml:"allowExplicit"`
 }
 
-// TODO: Rename
-type PropertyValueFrom struct {
+type ValueSourceConfig struct {
 	Parameter         *string                     `yaml:"parameter,omitempty"`
 	Literal           *string                     `yaml:"literal,omitempty"`
 	Environment       *ValueFromEvnironment       `yaml:"env,omitempty"`
 	AwsParameterStore *ValueFromAwsParameterStore `yaml:"awsParameterStore,omitempty"`
 }
 
-func (s *PropertyValueFrom) SourceType() SourceType {
+func (s *ValueSourceConfig) SourceType() SourceType {
 	if s != nil {
 		if s.Parameter != nil {
 			return SourceTypeParameter
@@ -253,7 +265,8 @@ type ValueFromEvnironment struct {
 }
 
 type ValueFromAwsParameterStore struct {
-	Key string `yaml:"key"`
+	Key                  string `yaml:"key"`
+	TreatNotFoundAsError *bool  `yaml:"treatNotFoundAsError"`
 }
 
 type OutputConfig struct {
