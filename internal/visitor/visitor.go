@@ -129,7 +129,7 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 		if ok && p.Default != nil {
 			dv := *p.Default
 			vs.context.Log.Debugf("%s, setting default value to: %s", prop.Name, dv)
-			prop.SetValue(api.NewValue(api.NewValueSource(*layer, api.SourceTypeDefault), "", dv, nil, false))
+			prop.SetValue(api.NewValue(api.NewValueSource(*layer, api.SourceTypeDefault), "", dv, nil, p.Sensitive))
 		}
 
 		if p.Source != nil {
