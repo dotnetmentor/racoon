@@ -21,7 +21,7 @@ var cases = []struct {
 	{"context_prod", "racoon.yaml", []string{"context=prod"}, "dotenv"},
 	{"context_local_tenant_demo1", "racoon.yaml", []string{"context=local", "tenant=demo1"}, "dotenv"},
 	{"context_dev_tenant_demo1", "racoon.yaml", []string{"context=dev", "tenant=demo1"}, "dotenv"},
-	{"context_prod_tenant_demo1", "racoon.yaml", []string{"context=prod", "tenant=demo1"}, "dotenv"},
+	{"context_prod_tenant_customer1", "racoon.yaml", []string{"context=prod", "tenant=customer1"}, "dotenv"},
 }
 
 func TestExportCommand(t *testing.T) {

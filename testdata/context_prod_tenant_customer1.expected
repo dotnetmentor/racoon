@@ -1,0 +1,6 @@
+ASPNETCORE_CONFIG=live
+ASPNETCORE_ENVIRONMENT=prod
+TENANT=customer1
+SENDGRID_API_KEY=apikey-secret-value-for-customer1
+PDF_URL=https://pdf.customer1.prod.domain.net/api
+WEBHOOK_BASE_URL=

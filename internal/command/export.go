@@ -91,7 +91,7 @@ func Export() *cli.Command {
 				}
 
 				if val.Error() != nil {
-					return false, fmt.Errorf("no value resolved for property %s, err: %w", p.Name, val.Error())
+					return false, fmt.Errorf("first value resolved for property %s has an error, err: %w", p.Name, val.Error())
 				}
 
 				if err := p.Validate(val); err != nil {

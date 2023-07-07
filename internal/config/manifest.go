@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/dotnetmentor/racoon/internal/output"
 	"github.com/dotnetmentor/racoon/internal/utils"
+
 	yaml2 "gopkg.in/yaml.v2"
 )
 
@@ -91,11 +91,11 @@ type Config struct {
 }
 
 type LayerConfig struct {
-	Name            string            `yaml:"name"`
-	Match           map[string]string `yaml:"match"`
-	Config          SourceConfig      `yaml:"config"`
-	ImplicitSources []SourceType      `yaml:"implicitSources"`
-	Properties      PropertyList      `yaml:"properties"`
+	Name            string       `yaml:"name"`
+	Match           []string     `yaml:"match"`
+	Config          SourceConfig `yaml:"config"`
+	ImplicitSources []SourceType `yaml:"implicitSources"`
+	Properties      PropertyList `yaml:"properties"`
 }
 
 type PropertyList []PropertyConfig
@@ -281,33 +281,34 @@ type OutputConfig struct {
 	output  output.Output
 }
 
-func (m *Manifest) GetLayers(ctx AppContext) (layers []LayerConfig) {
+func (m *Manifest) GetLayers(ctx AppContext) (layers []LayerConfig, err error) {
 	for _, l := range m.Layers {
-		if l.Matches(ctx.Parameters, ctx) {
+		match, err := l.Matches(ctx.Parameters, ctx)
+		if err != nil {
+			return layers, err
+		}
+		if match {
 			layers = append(layers, l)
 		}
 	}
 	return
 }
 
-func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool) {
-	for lpk, lpv := range l.Match {
-		if pv, ok := p[lpk]; ok {
-			matched, err := regexp.MatchString(lpv, pv)
-			if err != nil {
-				if lpv == pv {
-					ctx.Log.Warnf("parameter matched exactly but had an error matching regexp, err: %v", err)
-					match = true
-					continue
-				}
-				ctx.Log.Errorf("parameter matching error, err: %v", err)
-			}
-			if !matched {
+func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool, err error) {
+	match = true
+
+	for _, expr := range l.Match {
+		k, m, e := ParseExpression(expr)
+		if e != nil {
+			match = false
+			err = fmt.Errorf("matching layer %s against parameters failed, %v", l.Name, e)
+			break
+		}
+		if pv, ok := p[k]; ok {
+			if !m.Match(pv) {
 				match = false
 				break
 			}
-			match = true
-			continue
 		} else {
 			match = false
 			break
@@ -320,7 +321,7 @@ func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool) {
 		ctx.Log.Debugf("layer %s did not match parameters (conditions=%v parameters=%v)", l.Name, l.Match, p)
 	}
 
-	return match
+	return
 }
 
 func (o *OutputConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {

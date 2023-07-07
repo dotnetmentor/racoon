@@ -35,7 +35,12 @@ func (vs *Visitor) Init(excludes, includes []string) error {
 	implicit = explicit.Merge(implicit)
 	vs.layers = append(vs.layers, base)
 
-	for _, l := range vs.context.Manifest.GetLayers(vs.context) {
+	ls, err := vs.context.Manifest.GetLayers(vs.context)
+	if err != nil {
+		return err
+	}
+
+	for _, l := range ls {
 		layer := api.NewLayer(l.Name, l.ImplicitSources, l.Config, false)
 		explicit := l.Properties.Filter(excludes, includes)
 		vs.loadProperties(&layer, implicit, explicit)

@@ -46,7 +46,7 @@ properties:
 layers:
   - name: shared-environment-config
     match:
-      context: "^(dev|prod)$"
+      - context =~ ^(dev|prod)$ # dev or prod
     properties:
       - name: AspnetcoreConfig
         source:
@@ -61,7 +61,7 @@ layers:
 
   - name: development-config
     match:
-      context: dev
+      - context = dev
     properties:
       - name: AspnetcoreEnvironment
         source:
@@ -69,7 +69,7 @@ layers:
 
   - name: production-config
     match:
-      context: prod
+      - context = prod
     properties:
       - name: AspnetcoreEnvironment
         source:
@@ -80,8 +80,8 @@ layers:
 
   - name: tenant-config
     match:
-      context: "^(dev|prod)$"
-      tenant: "^.{3,}$"
+      - context =~ ^(dev|prod)$ # dev or prod
+      - tenant =~ ^.{3,}$
     properties:
       - name: PdfUrl
         source:

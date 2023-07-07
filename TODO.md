@@ -31,6 +31,7 @@
 - [x] Add support for regexpReplace (regexpReplace: "/demo-\*//")
 - [x] Allow writing fortatter sources as defined by formatting config
 - [x] Allow specifying <not-found> value to be treated as error by source (only AwsParameterStore supported at the moment)
+- [x] Improved layer matching and error handling
 
 - [ ] (in-progress) Initial round of real world testing
 
