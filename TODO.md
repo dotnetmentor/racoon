@@ -34,11 +34,10 @@
 - [x] Improved layer matching and error handling
 - [x] Warn about trying to "override" rules of a property
 - [x] Warn about trying to "override" description of a property
+- [x] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
 
 - [ ] (in-progress) Initial round of real world testing
 
-- [ ] Warn about finding value for property that does not allow implicit overrides
-- [ ] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
 - [ ] New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
 - [ ] Validation options: Value type (Int, String, Bool etc)
 - [ ] Validation options: Value match Regexp (.\*)
@@ -53,3 +52,4 @@
 - [ ] Make formatting rules a list to get predictable order
 - [ ] Feature: run export with --watch to have racoon running in the background, watching for changes
 - [ ] More tests on multiple levels and components (e2e, unit etc)
+- [ ] Warn about finding value for property that does not allow implicit overrides

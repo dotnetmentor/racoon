@@ -91,7 +91,7 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 			prop, _ := vs.newProperty(p.Name, p.Description, layer.Name, p.Sensitive, p.Rules, p.Format)
 
 			if !prop.Rules().Override.AllowImplicit {
-				vs.context.Log.Debugf("skipping property %s as implicit overrides are denied by property rules", prop.Name)
+				vs.context.Log.Debugf("skipping property %s, implicit overrides are not allowed by property rules", prop.Name)
 				continue
 			}
 
@@ -126,8 +126,9 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 
 	for _, p := range explicit {
 		prop, ok := vs.newProperty(p.Name, p.Description, layer.Name, p.Sensitive, p.Rules, p.Format)
+
 		if !layer.IsBaseLayer() && !prop.Rules().Override.AllowExplicit {
-			vs.context.Log.Debugf("skipping property %s as explicit overrides are denied by property rules", prop.Name)
+			vs.context.Log.Warnf("skipping property %s, explicit overrides are not allowed by property rules", prop.Name)
 			continue
 		}
 
