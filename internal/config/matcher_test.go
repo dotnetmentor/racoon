@@ -11,14 +11,14 @@ var cases = []struct {
 	regex      bool
 	error      bool
 }{
-	// {"invalid operator whitespace", "key=value", "", MatchTypeNotSet, "", false, true},
-	// {"valid equal whitespace", "key = value", "key", MatchEqual, "value", false, false},
-	// {"valid not equal", "key != value", "key", MatchNotEqual, "value", false, false},
-	// {"valid regex equal", "key =~ (foo|bar)", "key", MatchRegexEqual, "(foo|bar)", true, false},
-	// {"valid regex not equal", "key !~ (foo|bar)", "key", MatchRegexNotEqual, "(foo|bar)", true, false},
-	// {"invalid expression string", "str", "", MatchTypeNotSet, "", false, true},
-	// {"invalid expression operator 1", "key ~~ (foo|bar)", "", MatchTypeNotSet, "", false, true},
-	// {"invalid expression operator 2", "key =! value", "", MatchTypeNotSet, "", false, true},
+	{"invalid operator whitespace", "key=value", "", MatchTypeNotSet, "", false, true},
+	{"valid equal whitespace", "key = value", "key", MatchEqual, "value", false, false},
+	{"valid not equal", "key != value", "key", MatchNotEqual, "value", false, false},
+	{"valid regex equal", "key =~ (foo|bar)", "key", MatchRegexEqual, "(foo|bar)", true, false},
+	{"valid regex not equal", "key !~ (foo|bar)", "key", MatchRegexNotEqual, "(foo|bar)", true, false},
+	{"invalid expression string", "str", "", MatchTypeNotSet, "", false, true},
+	{"invalid expression operator 1", "key ~~ (foo|bar)", "", MatchTypeNotSet, "", false, true},
+	{"invalid expression operator 2", "key =! value", "", MatchTypeNotSet, "", false, true},
 	{"valid expression without value", `key != ""`, "key", MatchNotEqual, "", false, false},
 }
 
