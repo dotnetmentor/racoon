@@ -36,10 +36,9 @@
 - [x] Warn about trying to "override" description of a property
 - [x] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
 - [x] Validate that ImplicitSources list is unique
+- [x] Option to sort output keys (dotenv)
 
 - [ ] (in-progress) Initial round of real world testing
-
-- [ ] Option to sort output keys (dotenv)
 
 - [ ] More tests on multiple levels and components (e2e, unit etc)
 - [ ] Feature: New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?

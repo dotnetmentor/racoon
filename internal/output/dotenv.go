@@ -3,6 +3,7 @@ package output
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/dotnetmentor/racoon/internal/utils"
@@ -10,6 +11,7 @@ import (
 
 type Dotenv struct {
 	Quote bool `yaml:"quote"`
+	Sort  bool `yaml:"sort"`
 }
 
 func (o Dotenv) Type() string {
@@ -23,7 +25,10 @@ func NewDotenv() Dotenv {
 }
 
 func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {
-	for _, k := range keys {
+	output := make(map[string]string)
+	outputKeys := make([]string, len(keys))
+
+	for i, k := range keys {
 		var key string
 		if remapped, ok := remap[k]; ok && remapped != "" {
 			key = remapped
@@ -36,6 +41,15 @@ func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, value
 		if o.Quote {
 			format = "%s=\"%s\"\n"
 		}
-		w.Write([]byte(fmt.Sprintf(format, key, value)))
+		output[key] = fmt.Sprintf(format, key, value)
+		outputKeys[i] = key
+	}
+
+	if o.Sort {
+		sort.Strings(outputKeys)
+	}
+
+	for _, k := range outputKeys {
+		w.Write([]byte(output[k]))
 	}
 }
