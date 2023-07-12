@@ -31,7 +31,10 @@ func (vs *Visitor) Init(excludes, includes []string) error {
 	vs.context.Log.Debugf("initializing visitor")
 	implicit := config.PropertyList{}
 
-	base := api.NewLayer("base", []config.SourceType{}, vs.context.Manifest.Config.Sources, true)
+	base, err := api.NewLayer("base", []config.SourceType{}, vs.context.Manifest.Config.Sources, true)
+	if err != nil {
+		return err
+	}
 	explicit := vs.context.Manifest.Properties.Filter(excludes, includes)
 	vs.loadProperties(&base, implicit, explicit)
 	implicit = explicit.Merge(implicit)
@@ -43,7 +46,10 @@ func (vs *Visitor) Init(excludes, includes []string) error {
 	}
 
 	for _, l := range ls {
-		layer := api.NewLayer(l.Name, l.ImplicitSources, l.Config, false)
+		layer, err := api.NewLayer(l.Name, l.ImplicitSources, l.Config, false)
+		if err != nil {
+			return err
+		}
 		explicit := l.Properties.Filter(excludes, includes)
 		vs.loadProperties(&layer, implicit, explicit)
 		implicit = explicit.Merge(implicit)

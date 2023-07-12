@@ -35,21 +35,20 @@
 - [x] Warn about trying to "override" rules of a property
 - [x] Warn about trying to "override" description of a property
 - [x] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
+- [x] Validate that ImplicitSources list is unique
 
 - [ ] (in-progress) Initial round of real world testing
 
-- [ ] New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
-- [ ] Validation options: Value type (Int, String, Bool etc)
-- [ ] Validation options: Value match Regexp (.\*)
-- [ ] Validate that ImplicitSources list is unique
-- [ ] Parameter validation (minLength: 3, maxLength: 16 etc, type: string|number|...)
-- [ ] Caching for sources during a single run
-- [ ] Allow layers to be defined in separate files
-- [ ] Use config.sources as a way to enable the use of a source (if not specified, then it's not enabled)?
-- [ ] Allow generating values to help with seeding the store
-- [ ] Allow enforcing senitive values can't be written to unsafe store
 - [ ] Option to sort output keys (dotenv)
-- [ ] Make formatting rules a list to get predictable order
-- [ ] Feature: run export with --watch to have racoon running in the background, watching for changes
+
 - [ ] More tests on multiple levels and components (e2e, unit etc)
-- [ ] Warn about finding value for property that does not allow implicit overrides
+- [ ] Feature: New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
+- [ ] Feature: Validation options, Value type (Int, String, Bool etc)
+- [ ] Feature: Validation options, Value match Regexp (.\*)
+- [ ] Feature: Validation options, String values - MinLength: 3, MaxLength: 16 etc
+- [ ] Feature: Caching for sources during a single run
+- [ ] Feature: Allow layers to be defined in separate files
+- [ ] Feature: Use config.sources as a way to enable the use of a source (if not specified, then it's not enabled)?
+- [ ] Feature: Allow generating values to help with seeding the store
+- [ ] Feature: Allow enforcing senitive values can't be written to "unsafe" store
+- [ ] Feature: run export with --watch to have racoon running in the background, watching for changes

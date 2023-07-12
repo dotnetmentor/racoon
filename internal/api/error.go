@@ -5,6 +5,12 @@ import (
 	"fmt"
 )
 
+func NewConfigurationError(msg string) *ConfigurationError {
+	return &ConfigurationError{
+		msg: msg,
+	}
+}
+
 func NewNotFoundError(err error, key string, source SourceType) *NotFoundError {
 	msg := "value not found"
 	if err != nil {
@@ -40,6 +46,19 @@ func WrapFormattingErrors(errs []*FormattingError) error {
 	}
 	return &FormattingError{
 		errors: errs,
+	}
+}
+
+func IsConfigruationError(err error) bool {
+	if err == nil {
+		return false
+	}
+	var configurationError *ConfigurationError
+	switch {
+	case errors.As(err, &configurationError):
+		return true
+	default:
+		return false
 	}
 }
 
@@ -80,6 +99,14 @@ func IsFormattingError(err error) bool {
 	default:
 		return false
 	}
+}
+
+type ConfigurationError struct {
+	msg string
+}
+
+func (e *ConfigurationError) Error() string {
+	return fmt.Sprintf("ConfigurationError, %s", e.msg)
 }
 
 type NotFoundError struct {
