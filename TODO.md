@@ -32,10 +32,11 @@
 - [x] Allow writing fortatter sources as defined by formatting config
 - [x] Allow specifying <not-found> value to be treated as error by source (only AwsParameterStore supported at the moment)
 - [x] Improved layer matching and error handling
+- [x] Warn about trying to "override" rules of a property
+- [x] Warn about trying to "override" description of a property
 
 - [ ] (in-progress) Initial round of real world testing
 
-- [ ] Warn about trying to "redefine" rules of a property
 - [ ] Warn about finding value for property that does not allow implicit overrides
 - [ ] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
 - [ ] New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?

@@ -64,10 +64,10 @@ func Export() *cli.Command {
 				return nil
 			}
 
-			visit := visitor.New(ctx)
-
 			keys := []string{}
 			values := map[string]api.Value{}
+
+			visit := visitor.New(ctx)
 
 			err = visit.Init(excludes, includes)
 			if err != nil {

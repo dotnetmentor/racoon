@@ -26,6 +26,8 @@ type Visitor struct {
 }
 
 func (vs *Visitor) Init(excludes, includes []string) error {
+	api.SetLogger(vs.context.Log)
+
 	vs.context.Log.Debugf("initializing visitor")
 	implicit := config.PropertyList{}
 

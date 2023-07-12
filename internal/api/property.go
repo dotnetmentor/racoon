@@ -17,19 +17,32 @@ func NewProperty(properties PropertyList, name, description, source string, sens
 		values:      make(ValueList, 0),
 	}
 
-	found := false
-	for _, p := range properties {
-		if p.Name == property.Name {
-			found = true
+	exists := false
+	for _, ep := range properties {
+		if ep.Name == property.Name {
+			exists = true
+
+			// Allowing new property to be sensitive while enforcing it if existing property is marked sensitive
 			if !property.sensitive {
-				property.sensitive = p.sensitive
+				property.sensitive = ep.sensitive
 			}
-			property.rules = p.rules
+
+			// Copy from existing property
+			if len(property.Description) > 0 && property.Description != ep.Description {
+				apiLog.Warnf("%s/%s, overriding description is not allowed, description already defined in %s", property.source, property.Name, ep.source)
+			}
+			property.Description = ep.Description
+
+			if property.rules != config.DefaultPropertyRules && property.rules != ep.rules {
+				apiLog.Warnf("%s/%s, overriding rules is not allowed, rules already defined in %s", property.source, property.Name, ep.source)
+			}
+			property.rules = ep.rules
+
 			break
 		}
 	}
 
-	if !found {
+	if !exists {
 		isNew = true
 	}
 	return
