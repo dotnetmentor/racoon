@@ -19,6 +19,11 @@ func Export() *cli.Command {
 		Name:  "export",
 		Usage: "export values",
 		Flags: []cli.Flag{
+			&cli.StringSliceFlag{
+				Name:    "parameter",
+				Aliases: []string{"p"},
+				Usage:   "sets layer parameters",
+			},
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
@@ -46,7 +51,7 @@ func Export() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			ctx, err := newContext(c)
+			ctx, err := newContext(c, true)
 			if err != nil {
 				return err
 			}

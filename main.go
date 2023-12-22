@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"os"
 
 	"github.com/dotnetmentor/racoon/internal/command"
@@ -10,6 +11,9 @@ import (
 )
 
 const metadataExitCode string = "exitcode"
+
+//go:embed ui/dist
+var staticFiles embed.FS
 
 func main() {
 	app, ctx := createApp()
@@ -62,16 +66,12 @@ func createApp() (*cli.App, config.AppContext) {
 				Usage:   "sets the log level",
 				Value:   "info",
 			},
-			&cli.StringSliceFlag{
-				Name:    "parameter",
-				Aliases: []string{"p"},
-				Usage:   "sets layer parameters",
-			},
 		},
 		Commands: []*cli.Command{
 			command.Export(),
 			command.Read(),
 			command.Write(),
+			command.UI(staticFiles),
 		},
 		Before: func(c *cli.Context) error {
 			l := c.String("loglevel")

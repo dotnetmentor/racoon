@@ -20,8 +20,15 @@ func Write() *cli.Command {
 	return &cli.Command{
 		Name:  "write",
 		Usage: "write values for properties defined in the manifest file",
+		Flags: []cli.Flag{
+			&cli.StringSliceFlag{
+				Name:    "parameter",
+				Aliases: []string{"p"},
+				Usage:   "sets layer parameters",
+			},
+		},
 		Action: func(c *cli.Context) error {
-			ctx, err := newContext(c)
+			ctx, err := newContext(c, true)
 			if err != nil {
 				return err
 			}

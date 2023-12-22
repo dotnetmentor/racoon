@@ -13,14 +13,20 @@ func Read() *cli.Command {
 	return &cli.Command{
 		Name:  "read",
 		Usage: "reads a single value",
-		Flags: []cli.Flag{},
+		Flags: []cli.Flag{
+			&cli.StringSliceFlag{
+				Name:    "parameter",
+				Aliases: []string{"p"},
+				Usage:   "sets layer parameters",
+			},
+		},
 		Action: func(c *cli.Context) error {
 			if c.Args().Len() != 1 {
 				return fmt.Errorf("key not specified, must be provided as a single argument")
 			}
 			key := strings.TrimSpace(c.Args().First())
 
-			ctx, err := newContext(c)
+			ctx, err := newContext(c, true)
 			if err != nil {
 				return err
 			}

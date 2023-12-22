@@ -6,7 +6,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func newContext(c *cli.Context) (config.AppContext, error) {
+func newContext(c *cli.Context, validateParams bool) (config.AppContext, error) {
 	paths := config.DefaultManifestYamlFiles
 	manifest := c.String("manifest")
 	if manifest != "" {
@@ -32,8 +32,10 @@ func newContext(c *cli.Context) (config.AppContext, error) {
 		ctx.Log.Exit(1)
 	}
 
-	if err := p.ValidateParams(ctx.Manifest.Config.Parameters); err != nil {
-		return ctx, err
+	if validateParams {
+		if err := p.ValidateParams(ctx.Manifest.Config.Parameters); err != nil {
+			return ctx, err
+		}
 	}
 
 	ctx.Parameters = p
