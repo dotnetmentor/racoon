@@ -40,11 +40,10 @@ func TestExportCommand(t *testing.T) {
 			args := os.Args[0:1]
 			args = append(args, fmt.Sprintf("-manifest=./testdata/%s", tt.manifest))
 			args = append(args, "-loglevel=debug")
-
+			args = append(args, "export")
 			for _, p := range tt.parameters {
 				args = append(args, fmt.Sprintf("-parameter=%s", p))
 			}
-			args = append(args, "export")
 			args = append(args, fmt.Sprintf("-output=%s", tt.output))
 			args = append(args, fmt.Sprintf("-path=%s", actualFile))
 
