@@ -10,6 +10,12 @@ config:
       defaultKey: "/racoon/{context}/{key}"
 
 properties:
+  - name: OptionalProperty
+    description: This property will only be exported if set by a layer
+    rules:
+      validation:
+        optional: true
+
   - name: AspnetcoreConfig
     description: appsettings.*.json used by aspnet core
     default: development

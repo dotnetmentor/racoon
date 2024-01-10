@@ -91,19 +91,19 @@ func Export() *cli.Command {
 				}
 
 				val := p.Value()
-				if val == nil {
-					return false, fmt.Errorf("no value resolved for property %s", p.Name)
-				}
-
-				if val.Error() != nil {
-					return false, fmt.Errorf("first value resolved for property %s has an error, err: %w", p.Name, val.Error())
-				}
-
 				if err := p.Validate(val); err != nil {
 					return false, err
 				}
 
-				values[key] = val
+				// If validation passes but the value is nil, continue
+				if val == nil {
+					return true, nil
+				}
+
+				// If validation passes but we have a not found error for the resolved value, skip export
+				if !api.IsNotFoundError(val.Error()) {
+					values[key] = val
+				}
 
 				ctx.Log.Infof("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
 				for _, v := range p.Values() {
@@ -158,21 +158,26 @@ func Export() *cli.Command {
 						continue
 					}
 
+					v, ok := values[s]
+					if !ok {
+						continue
+					}
+
 					switch o.Export {
 					case config.ExportTypeClearText:
-						switch values[s].(type) {
+						switch v.(type) {
 						case *api.SensitiveValue:
 							continue
 						}
 					case config.ExportTypeSensitive:
-						switch values[s].(type) {
+						switch v.(type) {
 						case *api.ClearTextValue:
 							continue
 						}
 					}
 
 					filtered = append(filtered, s)
-					filteredValues[s] = values[s].Raw()
+					filteredValues[s] = v.Raw()
 				}
 
 				err := func() error {

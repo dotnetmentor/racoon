@@ -3,7 +3,6 @@
 - [x] Introduced properties concept (replaces secrets)
 - [x] Introduced the concept of sensitive values
 - [x] Introduced layers concept
-
 - [x] Allow changing the log-level using flag
 - [x] Allow defining a property in a layer
 - [x] Enforce sensitive value from a source (awsParameterStore etc)

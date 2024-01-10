@@ -45,19 +45,19 @@ func Read() *cli.Command {
 				}
 
 				val := p.Value()
-				if val == nil {
-					return false, fmt.Errorf("no value resolved for property %s", p.Name)
-				}
-
-				if val.Error() != nil {
-					return false, fmt.Errorf("first value resolved for property %s has an error, err: %w", p.Name, val.Error())
-				}
-
 				if err := p.Validate(val); err != nil {
 					return false, err
 				}
 
-				value = val
+				// If validation passes but the value is nil, continue
+				if val == nil {
+					return true, nil
+				}
+
+				// If validation passes but we have a not found error for the resolved value, skip read
+				if !api.IsNotFoundError(val.Error()) {
+					value = val
+				}
 
 				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
 				for _, v := range p.Values() {
@@ -74,7 +74,9 @@ func Read() *cli.Command {
 				return err
 			}
 
-			fmt.Printf("%s", value.Raw())
+			if value != nil {
+				fmt.Printf("%s", value.Raw())
+			}
 
 			return nil
 		},

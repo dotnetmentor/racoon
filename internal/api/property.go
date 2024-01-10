@@ -127,19 +127,28 @@ func (p Property) WritableFormatters() (writable []config.FormattingConfig) {
 
 func (p Property) Validate(v Value) error {
 	if v == nil {
-		return NewValidationError("value must not be nil", v)
+		if !p.Rules().Validation.Optional {
+			return NewValidationError(fmt.Sprintf("value must not be nil for property %s", p.Name), v)
+		} else {
+			return nil
+		}
 	}
 
 	if IsNotFoundError(v.Error()) {
-		return NewValidationError("value not found", v)
+		if !p.Rules().Validation.Optional {
+			return NewValidationError(fmt.Sprintf("value not found for property %s", p.Name), v)
+		} else {
+			return nil
+		}
 	}
 
 	if v.Error() != nil {
-		return NewValidationError(fmt.Sprintf("value resolved with error, %v", v.Error()), v)
+		return NewValidationError(fmt.Sprintf("value resolved with error for property %s, %v", v.Error(), p.Name), v)
 	}
 
 	if len(v.Raw()) == 0 && !p.Rules().Validation.AllowEmpty {
 		return NewValidationError(fmt.Sprintf("empty value not allowed for property %s", p.Name), v)
 	}
+
 	return nil
 }

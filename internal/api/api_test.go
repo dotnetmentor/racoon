@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestBooks(t *testing.T) {
+func TestProperties(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Api Suite")
 }
@@ -157,6 +158,117 @@ var _ = Describe("Properties", func() {
 
 			It("has an empty values list", func() {
 				Expect(property.Values()).To(Equal(api.ValueList{}))
+			})
+		})
+	})
+
+	Describe("Validation", func() {
+		var layer api.Layer
+		var source api.SourceType
+		var properties api.PropertyList
+
+		BeforeEach(func() {
+			api.SetLogger(logrus.New())
+
+			layer, _ = api.NewLayer("base", []config.SourceType{}, config.SourceConfig{}, true)
+			source = api.SourceTypeEnvironment
+			properties = api.PropertyList{}
+		})
+
+		When("property is validated using default rules", func() {
+			var property api.Property
+
+			BeforeEach(func() {
+				property, _ = api.NewProperty(
+					properties,
+					"Property1",
+					"Description",
+					layer.Name,
+					false,
+					config.RuleConfig{},
+					[]config.FormattingConfig{},
+				)
+			})
+
+			It("returns error for nil value", func() {
+				err := property.Validate(nil)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(&api.ValidationError{}))
+				Expect(err.Error()).To(ContainSubstring("ValidationError, value must not be nil"))
+			})
+
+			It("returns error for random error", func() {
+				re := fmt.Errorf("a random error")
+				val := api.NewValue(api.NewValueSource(layer, source), "key", "", re, false)
+				err := property.Validate(val)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(&api.ValidationError{}))
+				Expect(err.Error()).To(ContainSubstring("ValidationError, value resolved with error"))
+			})
+
+			It("returns error for not found error", func() {
+				nfe := api.NewNotFoundError(fmt.Errorf("not relevant"), "key", source)
+				val := api.NewValue(api.NewValueSource(layer, source), "key", "", nfe, false)
+				err := property.Validate(val)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(&api.ValidationError{}))
+				Expect(err.Error()).To(ContainSubstring("ValidationError, value not found"))
+			})
+
+			It("returns error for empty value", func() {
+				val := api.NewValue(api.NewValueSource(layer, source), "key", "", nil, false)
+				err := property.Validate(val)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(&api.ValidationError{}))
+				Expect(err.Error()).To(ContainSubstring("ValidationError, empty value not allowed"))
+			})
+		})
+
+		When("property is validated using permissive rules", func() {
+			var property api.Property
+
+			BeforeEach(func() {
+				property, _ = api.NewProperty(
+					properties,
+					"Property1",
+					"Description",
+					layer.Name,
+					false,
+					config.RuleConfig{
+						Validation: config.ValidationRuleConfig{
+							Optional:   true,
+							AllowEmpty: true,
+						},
+					},
+					[]config.FormattingConfig{},
+				)
+			})
+
+			It("returns error for nil value", func() {
+				err := property.Validate(nil)
+				Expect(err).To(Not(HaveOccurred()))
+			})
+
+			It("returns error for random error", func() {
+				re := fmt.Errorf("a random error")
+				val := api.NewValue(api.NewValueSource(layer, source), "key", "", re, false)
+				err := property.Validate(val)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(BeAssignableToTypeOf(&api.ValidationError{}))
+				Expect(err.Error()).To(ContainSubstring("ValidationError, value resolved with error"))
+			})
+
+			It("returns no error for not found value", func() {
+				nfe := api.NewNotFoundError(fmt.Errorf("not relevant"), "key", source)
+				val := api.NewValue(api.NewValueSource(layer, source), "key", "", nfe, false)
+				err := property.Validate(val)
+				Expect(err).To(Not(HaveOccurred()))
+			})
+
+			It("returns error for empty value", func() {
+				val := api.NewValue(api.NewValueSource(layer, source), "key", "", nil, false)
+				err := property.Validate(val)
+				Expect(err).To(Not(HaveOccurred()))
 			})
 		})
 	})
