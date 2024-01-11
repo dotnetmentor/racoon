@@ -44,7 +44,7 @@ func UI(fs embed.FS) *cli.Command {
 			))
 			s.Router.Post("/api/compare", compareHandler(
 				ctx,
-				c.String("manifest"),
+				ctx.Manifest.Filepath(),
 			))
 
 			err = s.RunAndBlock()

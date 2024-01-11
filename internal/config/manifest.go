@@ -48,6 +48,7 @@ type ExportType string
 func NewManifest(paths []string) (Manifest, error) {
 	// read manifest file
 	var file []byte
+	var path string
 	for _, filename := range paths {
 		mp, _ := filepath.Abs(filename)
 
@@ -60,6 +61,7 @@ func NewManifest(paths []string) (Manifest, error) {
 			return Manifest{}, fmt.Errorf("failed to read manifest file (path=%s). %v", mp, err)
 		}
 		file = bs
+		path = filename
 	}
 
 	if file == nil {
@@ -67,7 +69,9 @@ func NewManifest(paths []string) (Manifest, error) {
 	}
 
 	// parse
-	m := Manifest{}
+	m := Manifest{
+		filepath: path,
+	}
 	err := yaml2.UnmarshalStrict(file, &m)
 	if err != nil {
 		return Manifest{}, fmt.Errorf("failed to parse manifest yaml. %v", err)
@@ -79,10 +83,15 @@ func NewManifest(paths []string) (Manifest, error) {
 }
 
 type Manifest struct {
+	filepath   string
 	Config     Config         `yaml:"config"`
 	Layers     []LayerConfig  `yaml:"layers"`
 	Properties PropertyList   `yaml:"properties"`
 	Outputs    []OutputConfig `yaml:"outputs"`
+}
+
+func (m Manifest) Filepath() string {
+	return m.filepath
 }
 
 type Config struct {

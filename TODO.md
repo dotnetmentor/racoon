@@ -36,6 +36,7 @@
 - [x] Warn about defining explicit property in layer when explicity overrides is not allowed by parent property rules
 - [x] Validate that ImplicitSources list is unique
 - [x] Option to sort output keys (dotenv)
+- [x] UI command with web interface that allows comparing results between different exports
 
 - [ ] (in-progress) Initial round of real world testing
 
@@ -50,3 +51,4 @@
 - [ ] Feature: Allow generating values to help with seeding the store
 - [ ] Feature: Allow enforcing senitive values can't be written to "unsafe" store
 - [ ] Feature: run export with --watch to have racoon running in the background, watching for changes
+- [ ] Feature: UI: ... what do we need to make it helpful to devs and administrators?
