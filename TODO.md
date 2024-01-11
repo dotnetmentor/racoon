@@ -37,6 +37,7 @@
 - [x] Validate that ImplicitSources list is unique
 - [x] Option to sort output keys (dotenv)
 - [x] UI command with web interface that allows comparing results between different exports
+- [x] Support multiple paths with formatting for outputs (using --path= should override all paths specified in manifest)
 
 - [ ] (in-progress) Initial round of real world testing
 

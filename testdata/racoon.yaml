@@ -106,6 +106,6 @@ layers:
 
 outputs:
   - type: dotenv
-    path: "-"
+    paths: ["-"]
     config:
       quote: false

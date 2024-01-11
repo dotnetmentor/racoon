@@ -138,80 +138,84 @@ func Export() *cli.Command {
 
 				outputMatched = true
 
-				path := o.Path
+				paths := o.Paths
 				if p != "" {
-					path = p
+					paths = []string{p}
 				}
 
-				if ot == "" && path == "-" {
-					ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s (alias=%s)", o.Type, o.Alias)
-					continue
-				}
-
-				filtered := []string{}
-				filteredValues := make(map[string]string)
-				for _, s := range keys {
-					if len(o.Exclude) > 0 && utils.StringSliceContains(o.Exclude, s) {
-						continue
-					}
-					if len(o.Include) > 0 && !utils.StringSliceContains(o.Include, s) {
+				for _, path := range paths {
+					if ot == "" && path == "-" {
+						ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s (alias=%s path=%s)", o.Type, o.Alias, path)
 						continue
 					}
 
-					v, ok := values[s]
-					if !ok {
-						continue
-					}
+					path = ctx.Parameters.Replace(path)
 
-					switch o.Export {
-					case config.ExportTypeClearText:
-						switch v.(type) {
-						case *api.SensitiveValue:
+					filtered := []string{}
+					filteredValues := make(map[string]string)
+					for _, s := range keys {
+						if len(o.Exclude) > 0 && utils.StringSliceContains(o.Exclude, s) {
 							continue
 						}
-					case config.ExportTypeSensitive:
-						switch v.(type) {
-						case *api.ClearTextValue:
+						if len(o.Include) > 0 && !utils.StringSliceContains(o.Include, s) {
 							continue
 						}
-					}
 
-					filtered = append(filtered, s)
-					filteredValues[s] = v.Raw()
-				}
-
-				err := func() error {
-					out := os.Stdout
-					if path != "" && path != "-" {
-						file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-						if err != nil {
-							return fmt.Errorf("failed to open file for writing, %v", err)
+						v, ok := values[s]
+						if !ok {
+							continue
 						}
-						defer file.Close()
-						defer file.Sync()
-						out = file
-					}
-					w := bufio.NewWriter(out)
-					defer w.Flush()
 
-					switch out := config.AsOutput(o).(type) {
-					case output.Dotenv:
-						ctx.Log.Infof("exporting values as dotenv (alias=%s path=%s quote=%v)", o.Alias, path, out.Quote)
-						out.Write(w, filtered, o.Map, filteredValues)
-					case output.Tfvars:
-						ctx.Log.Infof("exporting values as tfvars (alias=%s path=%s)", o.Alias, path)
-						out.Write(w, filtered, o.Map, filteredValues)
-					case output.Json:
-						ctx.Log.Infof("exporting values as json (alias=%s path=%s)", o.Alias, path)
-						out.Write(w, filtered, o.Map, filteredValues)
-					default:
-						return fmt.Errorf("unsupported output type %s", o.Type)
+						switch o.Export {
+						case config.ExportTypeClearText:
+							switch v.(type) {
+							case *api.SensitiveValue:
+								continue
+							}
+						case config.ExportTypeSensitive:
+							switch v.(type) {
+							case *api.ClearTextValue:
+								continue
+							}
+						}
+
+						filtered = append(filtered, s)
+						filteredValues[s] = v.Raw()
 					}
 
-					return nil
-				}()
-				if err != nil {
-					return err
+					err := func() error {
+						out := os.Stdout
+						if path != "" && path != "-" {
+							file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+							if err != nil {
+								return fmt.Errorf("failed to open file for writing, %v", err)
+							}
+							defer file.Close()
+							defer file.Sync()
+							out = file
+						}
+						w := bufio.NewWriter(out)
+						defer w.Flush()
+
+						switch out := config.AsOutput(o).(type) {
+						case output.Dotenv:
+							ctx.Log.Infof("exporting values as dotenv (alias=%s path=%s quote=%v)", o.Alias, path, out.Quote)
+							out.Write(w, filtered, o.Map, filteredValues)
+						case output.Tfvars:
+							ctx.Log.Infof("exporting values as tfvars (alias=%s path=%s)", o.Alias, path)
+							out.Write(w, filtered, o.Map, filteredValues)
+						case output.Json:
+							ctx.Log.Infof("exporting values as json (alias=%s path=%s)", o.Alias, path)
+							out.Write(w, filtered, o.Map, filteredValues)
+						default:
+							return fmt.Errorf("unsupported output type %s", o.Type)
+						}
+
+						return nil
+					}()
+					if err != nil {
+						return err
+					}
 				}
 			}
 
