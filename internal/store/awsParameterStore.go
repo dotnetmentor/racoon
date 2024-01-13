@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -74,14 +75,46 @@ func (s *AwsParameterStore) Write(ctx config.AppContext, key, value, description
 		Tier:        ssmtypes.ParameterTierStandard,
 		Overwrite:   true,
 	}
+
 	if sourceConfig.KmsKey != "" {
 		i.KeyId = &sourceConfig.KmsKey
 	}
-	_, err := s.client.PutParameter(ctx.Context, &i)
-	if err != nil {
+
+	if _, err := s.client.PutParameter(ctx.Context, &i); err != nil {
 		ctx.Log.Errorf("failed to create parameter %s in %s, %v", key, config.SourceTypeAwsParameterStore, err)
 		return err
 	}
+
+	tags := []ssmtypes.Tag{}
+
+	if ctx.Manifest.Name != "" {
+		tags = append(tags, ssmtypes.Tag{
+			Key:   aws.String("racoon/owner"),
+			Value: aws.String(ctx.Manifest.Name),
+		})
+	}
+
+	tags = append(tags, ssmtypes.Tag{
+		Key:   aws.String("racoon/version"),
+		Value: aws.String(ctx.Metadata.Version),
+	})
+
+	for k, v := range ctx.Manifest.Labels {
+		tags = append(tags, ssmtypes.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		})
+	}
+
+	if _, err := s.client.AddTagsToResource(ctx.Context, &ssm.AddTagsToResourceInput{
+		ResourceId:   &key,
+		ResourceType: ssmtypes.ResourceTypeForTaggingParameter,
+		Tags:         tags,
+	}); err != nil {
+		ctx.Log.Errorf("failed to tag parameter %s in %s, %v", key, config.SourceTypeAwsParameterStore, err)
+		return err
+	}
+
 	return nil
 }
 
