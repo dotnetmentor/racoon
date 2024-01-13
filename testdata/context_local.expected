@@ -4,3 +4,5 @@ TENANT=default
 SENDGRID_API_KEY=
 PDF_URL=http://pdf.local.domain.net/api
 WEBHOOK_BASE_URL=
+GITHUB_API_KEY=
+GITHUB_CLIENT_ID=

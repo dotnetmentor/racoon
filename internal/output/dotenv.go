@@ -10,8 +10,11 @@ import (
 )
 
 type Dotenv struct {
-	Quote bool `yaml:"quote"`
-	Sort  bool `yaml:"sort"`
+	Sort          bool   `yaml:"sort"`
+	Quote         bool   `yaml:"quote"`
+	Uppercase     bool   `yaml:"uppercase"`
+	WordSeparator string `yaml:"wordSeparator"`
+	PathSeparator string `yaml:"pathSeparator"`
 }
 
 func (o Dotenv) Type() string {
@@ -20,7 +23,11 @@ func (o Dotenv) Type() string {
 
 func NewDotenv() Dotenv {
 	return Dotenv{
-		Quote: true,
+		Sort:          false,
+		Quote:         true,
+		Uppercase:     true,
+		WordSeparator: "_",
+		PathSeparator: "_",
 	}
 }
 
@@ -33,7 +40,11 @@ func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, value
 		if remapped, ok := remap[k]; ok && remapped != "" {
 			key = remapped
 		} else {
-			key = utils.CamelCaseSplitToUpperJoinByUnderscore(k)
+			key = utils.FormatKey(k, utils.Formatting{
+				Uppercase:     o.Uppercase,
+				WordSeparator: o.WordSeparator,
+				PathSeparator: o.PathSeparator,
+			})
 		}
 
 		value := strings.TrimSuffix(values[k], "\n")

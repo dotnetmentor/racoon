@@ -10,7 +10,6 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/fatih/camelcase"
 
 	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
@@ -100,21 +99,13 @@ func newParameterStoreClient(ctx context.Context) (*ssm.Client, error) {
 }
 
 func awpParameterStoreKey(format, key string) string {
-	nameKey := camelCaseSplitToLowerJoinBySlashAndUnderscore(key)
+	nameKey := utils.FormatKey(key, utils.Formatting{
+		Lowercase:     true,
+		WordSeparator: "_",
+		PathSeparator: "/",
+	})
 	key = strings.ReplaceAll(format, "{key}", nameKey)
 	return key
-}
-
-func camelCaseSplitToLowerJoinBySlashAndUnderscore(name string) (key string) {
-	parts := camelcase.Split(name)
-	if len(parts) == 1 {
-		return parts[0]
-	}
-
-	for i, part := range parts {
-		parts[i] = strings.ToLower(part)
-	}
-	return fmt.Sprintf("%s/%s", parts[0], strings.Join(parts[1:], "_"))
 }
 
 // NOTE: Really ugly hack to avoid magic strings, poor performance expected

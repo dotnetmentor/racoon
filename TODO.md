@@ -38,11 +38,11 @@
 - [x] Option to sort output keys (dotenv)
 - [x] UI command with web interface that allows comparing results between different exports
 - [x] Support multiple paths with formatting for outputs (using --path= should override all paths specified in manifest)
+- [x] Feature: Dot-based property name format for grouping and to enable structured output in json etc (name: Translation.TravelwebUrl -> {"Translation": {"TravelWebUrl": "..."}})?
 
 - [ ] (in-progress) Initial round of real world testing
 
 - [ ] More tests on multiple levels and components (e2e, unit etc)
-- [ ] Feature: New dot-format for propety names to enable structured output in json etc (name: Translation.TravelwebUrl -> {"translation": {"travelWebUrl": "..."}})?
 - [ ] Feature: Validation options, Value type (Int, String, Bool etc)
 - [ ] Feature: Validation options, Value match Regexp (.\*)
 - [ ] Feature: Validation options, String values - MinLength: 3, MaxLength: 16 etc

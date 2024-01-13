@@ -10,12 +10,6 @@ config:
       defaultKey: "/racoon/{context}/{key}"
 
 properties:
-  - name: OptionalProperty
-    description: This property will only be exported if set by a layer
-    rules:
-      validation:
-        optional: true
-
   - name: AspnetcoreConfig
     description: appsettings.*.json used by aspnet core
     default: development
@@ -48,6 +42,28 @@ properties:
     rules:
       validation:
         allowEmpty: true
+
+  - name: Github.ApiKey
+    description: Github API key
+    sensitive: true
+    default: ""
+    rules:
+      validation:
+        allowEmpty: true
+
+  - name: Github.ClientId
+    description: Github Client ID
+    sensitive: true
+    default: ""
+    rules:
+      validation:
+        allowEmpty: true
+
+  - name: OptionalProperty
+    description: This property will only be exported if set by a layer
+    rules:
+      validation:
+        optional: true
 
 layers:
   - name: shared-environment-config
@@ -83,6 +99,14 @@ layers:
       - name: SendgridApiKey
         source:
           awsParameterStore: {}
+      - name: Github.ApiKey
+        source:
+          awsParameterStore:
+            key: "/racoon/{context}/shared/{key}"
+      - name: Github.ClientId
+        source:
+          awsParameterStore:
+            key: "/racoon/{context}/shared/{key}"
 
   - name: tenant-config
     match:
@@ -109,3 +133,7 @@ outputs:
     paths: ["-"]
     config:
       quote: false
+      # wordSeparator: ""
+      # pathSeparator: "__"
+      # uppercase: false
+      # lowercase: false

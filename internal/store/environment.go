@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/dotnetmentor/racoon/internal/api"
@@ -44,16 +45,18 @@ func (s *Environment) Read(ctx config.AppContext, layer api.Layer, key string, s
 		keys = append(keys, propertySource.Key)
 	} else {
 		keys = append(keys, key)
-		keys = append(keys, utils.CamelCaseSplitToUpperJoinByUnderscore(key))
+		keys = append(keys, utils.FormatKey(key, utils.Formatting{
+			Uppercase:     true,
+			WordSeparator: "_",
+			PathSeparator: "_",
+		}))
 	}
 
 	for _, k := range keys {
 		if v, ok := os.LookupEnv(k); ok {
 			return api.NewValue(api.NewValueSource(layer, api.SourceTypeEnvironment), k, v, nil, sensitive)
-		} else {
-			return api.NewValue(api.NewValueSource(layer, api.SourceTypeEnvironment), k, "", api.NewNotFoundError(nil, k, api.SourceTypeEnvironment), sensitive)
 		}
 	}
 
-	return nil
+	return api.NewValue(api.NewValueSource(layer, api.SourceTypeEnvironment), fmt.Sprintf("%v", keys), "", api.NewNotFoundError(nil, fmt.Sprintf("%v", keys), api.SourceTypeEnvironment), sensitive)
 }
