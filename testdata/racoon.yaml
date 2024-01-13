@@ -1,13 +1,4 @@
-config:
-  parameters:
-    context:
-      required: true
-    tenant:
-      required: false
-  sources:
-    awsParameterStore:
-      kmsKey: alias/parameter_store_key
-      defaultKey: "/racoon/{context}/{key}"
+extends: ./racoon.base.yaml
 
 properties:
   - name: AspnetcoreConfig

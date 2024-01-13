@@ -39,6 +39,7 @@
 - [x] UI command with web interface that allows comparing results between different exports
 - [x] Support multiple paths with formatting for outputs (using --path= should override all paths specified in manifest)
 - [x] Feature: Dot-based property name format for grouping and to enable structured output in json etc (name: Translation.TravelwebUrl -> {"Translation": {"TravelWebUrl": "..."}})?
+- [ ] Allow extending a base config, referencing a yaml file to serve as the base
 
 - [ ] (in-progress) Initial round of real world testing
 

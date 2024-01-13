@@ -46,35 +46,13 @@ type OutputType string
 type ExportType string
 
 func NewManifest(paths []string) (Manifest, error) {
-	// read manifest file
-	var file []byte
-	var path string
-	for _, filename := range paths {
-		mp, _ := filepath.Abs(filename)
+	// base path
+	basepath, _ := os.Getwd()
 
-		if _, err := os.Stat(mp); os.IsNotExist(err) {
-			continue
-		}
-
-		bs, err := os.ReadFile(mp)
-		if err != nil {
-			return Manifest{}, fmt.Errorf("failed to read manifest file (path=%s). %v", mp, err)
-		}
-		file = bs
-		path = filename
-	}
-
-	if file == nil {
-		return Manifest{}, fmt.Errorf("failed to find manifest file paths=%v", paths)
-	}
-
-	// parse
-	m := Manifest{
-		filepath: path,
-	}
-	err := yaml2.UnmarshalStrict(file, &m)
+	// read manifest
+	m, err := readManifest(basepath, paths)
 	if err != nil {
-		return Manifest{}, fmt.Errorf("failed to parse manifest yaml. %v", err)
+		return m, err
 	}
 
 	// TODO: Validate manifest config
@@ -82,12 +60,68 @@ func NewManifest(paths []string) (Manifest, error) {
 	return m, nil
 }
 
+func readManifest(basepath string, paths []string) (Manifest, error) {
+	// read manifest file
+	var file []byte
+	var path string
+
+	for _, filename := range paths {
+		fullpath := filepath.Join(basepath, filename)
+
+		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
+			continue
+		}
+
+		bs, err := os.ReadFile(fullpath)
+		if err != nil {
+			return Manifest{}, fmt.Errorf("failed to read manifest file (path=%s). %v", fullpath, err)
+		}
+		file = bs
+		path = fullpath
+		break
+	}
+
+	if file == nil {
+		return Manifest{}, fmt.Errorf("failed to find manifest file paths=%v", paths)
+	}
+
+	// parse base config
+	ec := ExtendsConfig{}
+	if err := yaml2.Unmarshal(file, &ec); err != nil {
+		return Manifest{}, fmt.Errorf("failed to parse manifest base yaml (%s), %v", path, err)
+	}
+
+	// parse manifest
+	m := Manifest{}
+
+	if len(ec.Extends) > 0 {
+		bm, err := readManifest(filepath.Dir(path), []string{ec.Extends})
+		if err != nil {
+			return Manifest{}, err
+		}
+		m = bm
+	}
+
+	m.filepath = path
+
+	if err := yaml2.UnmarshalStrict(file, &m); err != nil {
+		return Manifest{}, fmt.Errorf("failed to parse manifest yaml (%s), %v", path, err)
+	}
+
+	return m, nil
+}
+
 type Manifest struct {
-	filepath   string
-	Config     Config         `yaml:"config"`
-	Layers     []LayerConfig  `yaml:"layers"`
-	Properties PropertyList   `yaml:"properties"`
-	Outputs    []OutputConfig `yaml:"outputs"`
+	filepath      string
+	ExtendsConfig `yaml:",inline"`
+	Config        Config         `yaml:"config"`
+	Layers        []LayerConfig  `yaml:"layers"`
+	Properties    PropertyList   `yaml:"properties"`
+	Outputs       []OutputConfig `yaml:"outputs"`
+}
+
+type ExtendsConfig struct {
+	Extends string `yaml:"extends"`
 }
 
 func (m Manifest) Filepath() string {
