@@ -161,16 +161,18 @@ func Write(metadata config.AppMetadata) *cli.Command {
 				}
 
 				val := p.Value()
-				if val == nil {
-					return false, fmt.Errorf("no value resolved for property %s", p.Name)
-				}
 
 				// NOTE: We should not return error for invalid value at this point, it will stop us writing the initial value
 				if err := p.Validate(val); err != nil {
-					ctx.Log.Warnf("property %s, defined in %s, resolved to invalid value from %s, value: %s", p.Name, p.Source(), val.Source(), val.String())
+					if val != nil {
+						ctx.Log.Warnf("property %s, defined in %s, resolved to invalid value from %s, value: %s", p.Name, p.Source(), val.Source(), val.String())
+					}
 				} else {
-					ctx.Log.Infof("property %s, defined in %s, resolved to value from %s, value: %s", p.Name, p.Source(), val.Source(), val.String())
+					if val != nil {
+						ctx.Log.Infof("property %s, defined in %s, resolved to value from %s, value: %s", p.Name, p.Source(), val.Source(), val.String())
+					}
 				}
+
 				for _, v := range p.Values() {
 					if err := p.Validate(v); err != nil {
 						ctx.Log.Infof("- value from %s is invalid, err: %v", v.Source(), err)
