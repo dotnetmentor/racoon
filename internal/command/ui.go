@@ -18,7 +18,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func UI(fs embed.FS) *cli.Command {
+func UI(metadata config.AppMetadata, fs embed.FS) *cli.Command {
 	return &cli.Command{
 		Name:      "ui",
 		Usage:     "Exposes a UI over HTTP",
@@ -26,7 +26,7 @@ func UI(fs embed.FS) *cli.Command {
 		Hidden:    false,
 		Flags:     []cli.Flag{},
 		Action: func(c *cli.Context) error {
-			ctx, err := newContext(c, false)
+			ctx, err := newContext(c, metadata, false)
 			if err != nil {
 				return err
 			}

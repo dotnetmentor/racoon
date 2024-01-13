@@ -16,7 +16,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Write() *cli.Command {
+func Write(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "write",
 		Usage: "write values for properties defined in the manifest file",
@@ -28,7 +28,7 @@ func Write() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			ctx, err := newContext(c, true)
+			ctx, err := newContext(c, metadata, true)
 			if err != nil {
 				return err
 			}

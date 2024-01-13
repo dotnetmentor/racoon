@@ -1,5 +1,10 @@
 extends: ./racoon.base.yaml
 
+name: racoon-e2e-tests
+labels:
+  ManagedBy: racoon
+  CostAllocationGroup: Security
+
 properties:
   - name: AspnetcoreConfig
     description: appsettings.*.json used by aspnet core

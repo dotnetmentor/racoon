@@ -5,11 +5,12 @@ import (
 	"strings"
 
 	"github.com/dotnetmentor/racoon/internal/api"
+	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/visitor"
 	"github.com/urfave/cli/v2"
 )
 
-func Read() *cli.Command {
+func Read(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "read",
 		Usage: "reads a single value",
@@ -26,7 +27,7 @@ func Read() *cli.Command {
 			}
 			key := strings.TrimSpace(c.Args().First())
 
-			ctx, err := newContext(c, true)
+			ctx, err := newContext(c, metadata, true)
 			if err != nil {
 				return err
 			}

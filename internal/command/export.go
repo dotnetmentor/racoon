@@ -14,7 +14,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Export() *cli.Command {
+func Export(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "export",
 		Usage: "export values",
@@ -51,7 +51,7 @@ func Export() *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			ctx, err := newContext(c, true)
+			ctx, err := newContext(c, metadata, true)
 			if err != nil {
 				return err
 			}

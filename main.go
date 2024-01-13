@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 	"os"
 
 	"github.com/dotnetmentor/racoon/internal/command"
@@ -14,6 +15,12 @@ const metadataExitCode string = "exitcode"
 
 //go:embed ui/dist
 var staticFiles embed.FS
+
+var (
+	version = "dev"
+	commit  = "none"
+	date    = "unknown"
+)
 
 func main() {
 	app, ctx := createApp()
@@ -39,16 +46,25 @@ func main() {
 }
 
 func createApp() (*cli.App, config.AppContext) {
-	ctx, err := config.NewContext()
+	metadata := config.AppMetadata{
+		Version: version,
+		Commit:  commit,
+		Date:    date,
+	}
+	ctx, err := config.NewContext(metadata)
 	if err != nil {
 		ctx.Log.Error(err)
 		ctx.Log.Exit(1)
 	}
 
 	// configure cli app
+	cli.VersionPrinter = func(c *cli.Context) {
+		fmt.Printf("%s %s\ncommit = %s\ndate = %s\n", c.App.Name, c.App.Version, metadata.Commit, metadata.Date)
+	}
 	app := &cli.App{
-		Name:  "racoon",
-		Usage: "secrets are my thing",
+		Name:    "racoon",
+		Usage:   "configuration and secrets management",
+		Version: metadata.Version,
 		CommandNotFound: func(c *cli.Context, s string) {
 			ctx.Log.Warnf("unknown command %s", s)
 			c.App.Metadata[metadataExitCode] = 127
@@ -68,10 +84,10 @@ func createApp() (*cli.App, config.AppContext) {
 			},
 		},
 		Commands: []*cli.Command{
-			command.Export(),
-			command.Read(),
-			command.Write(),
-			command.UI(staticFiles),
+			command.Export(metadata),
+			command.Read(metadata),
+			command.Write(metadata),
+			command.UI(metadata, staticFiles),
 		},
 		Before: func(c *cli.Context) error {
 			l := c.String("loglevel")

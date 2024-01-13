@@ -112,16 +112,22 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 }
 
 type Manifest struct {
-	filepath      string
-	ExtendsConfig `yaml:",inline"`
-	Config        Config         `yaml:"config"`
-	Layers        []LayerConfig  `yaml:"layers"`
-	Properties    PropertyList   `yaml:"properties"`
-	Outputs       []OutputConfig `yaml:"outputs"`
+	filepath       string
+	ExtendsConfig  `yaml:",inline"`
+	MetadataConfig `yaml:",inline"`
+	Config         Config         `yaml:"config"`
+	Layers         []LayerConfig  `yaml:"layers"`
+	Properties     PropertyList   `yaml:"properties"`
+	Outputs        []OutputConfig `yaml:"outputs"`
 }
 
 type ExtendsConfig struct {
 	Extends string `yaml:"extends"`
+}
+
+type MetadataConfig struct {
+	Name   string            `yaml:"name"`
+	Labels map[string]string `yaml:"labels"`
 }
 
 func (m Manifest) Filepath() string {
