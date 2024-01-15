@@ -9,7 +9,6 @@ labels:
 properties:
   - name: AspnetcoreConfig
     description: appsettings.*.json used by aspnet core
-    default: development
 
   - name: AspnetcoreEnvironment
     description: Context to run the app under (local/dev/prod)

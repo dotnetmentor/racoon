@@ -41,6 +41,7 @@
 - [x] Feature: Dot-based property name format for grouping and to enable structured output in json etc (name: Translation.TravelwebUrl -> {"Translation": {"TravelWebUrl": "..."}})?
 - [x] Allow extending a base config, referencing a yaml file to serve as the base
 - [x] Tagging of AWS SSM parameters using default tags (owner + version) and labels
+- [x] Fix: Allow base config to define layers (currently, base layers are replaced by layers in defined by referencing config)
 
 - [ ] (in-progress) Initial round of real world testing
 

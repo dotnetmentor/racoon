@@ -8,3 +8,10 @@ config:
     awsParameterStore:
       kmsKey: alias/parameter_store_key
       defaultKey: "/racoon/{context}/{key}"
+
+layers:
+  - name: base-config
+    properties:
+      - name: AspnetcoreConfig
+        source:
+          literal: development

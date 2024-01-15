@@ -56,6 +56,13 @@ func NewManifest(paths []string) (Manifest, error) {
 	}
 
 	// TODO: Validate manifest config
+	layers := make(map[string]interface{})
+	for _, l := range m.Layers {
+		if _, ok := layers[l.Name]; ok {
+			return m, fmt.Errorf("duplicate layer, name %s used multiple times", l.Name)
+		}
+		layers[l.Name] = nil
+	}
 
 	return m, nil
 }
@@ -93,6 +100,7 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 
 	// parse manifest
 	m := Manifest{}
+	b := Manifest{}
 
 	if len(ec.Extends) > 0 {
 		bm, err := readManifest(filepath.Dir(path), []string{ec.Extends})
@@ -100,6 +108,7 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 			return Manifest{}, err
 		}
 		m = bm
+		b = bm
 	}
 
 	m.filepath = path
@@ -107,6 +116,8 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 	if err := yaml2.UnmarshalStrict(file, &m); err != nil {
 		return Manifest{}, fmt.Errorf("failed to parse manifest yaml (%s), %v", path, err)
 	}
+
+	m.Layers = append(b.Layers, m.Layers...)
 
 	return m, nil
 }
