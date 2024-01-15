@@ -136,7 +136,12 @@ func Write(metadata config.AppMetadata) *cli.Command {
 					}
 
 					if strVal == v.Raw() {
-						break
+						if ok := promptYesNo("the value is unchanged, force update"); !ok {
+							ctx.Log.Debugf("skipping update of %s in %s, value unchanged", i.sourceKey, v.Source().Type())
+							break
+						} else {
+							ctx.Log.Debugf("force updating %s in %s, value unchanged", i.sourceKey, v.Source().Type())
+						}
 					}
 
 					ctx.Log.Debugf("setting %s in %s, new value: %s", i.sourceKey, v.Source().Type(), newVal.String())
