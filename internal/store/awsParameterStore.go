@@ -100,9 +100,10 @@ func (s *AwsParameterStore) Write(ctx config.AppContext, key, value, description
 	})
 
 	for k, v := range ctx.Manifest.Labels {
+		fv := ctx.Parameters.Replace(v)
 		tags = append(tags, ssmtypes.Tag{
 			Key:   aws.String(k),
-			Value: aws.String(v),
+			Value: aws.String(fv),
 		})
 	}
 
