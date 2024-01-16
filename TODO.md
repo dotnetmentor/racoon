@@ -42,6 +42,7 @@
 - [x] Allow extending a base config, referencing a yaml file to serve as the base
 - [x] Tagging of AWS SSM parameters using default tags (owner + version) and labels
 - [x] Fix: Allow base config to define layers (currently, base layers are replaced by layers in defined by referencing config)
+- [x] Fix: If base config has layers but referencing config does not, validation error for "duplicate layer" is triggered.
 
 - [ ] (in-progress) Initial round of real world testing
 

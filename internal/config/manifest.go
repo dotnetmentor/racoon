@@ -59,7 +59,7 @@ func NewManifest(paths []string) (Manifest, error) {
 	layers := make(map[string]interface{})
 	for _, l := range m.Layers {
 		if _, ok := layers[l.Name]; ok {
-			return m, fmt.Errorf("duplicate layer, name %s used multiple times", l.Name)
+			return m, fmt.Errorf("duplicate layer, %s defined multiple times", l.Name)
 		}
 		layers[l.Name] = nil
 	}
@@ -73,7 +73,12 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 	var path string
 
 	for _, filename := range paths {
-		fullpath := filepath.Join(basepath, filename)
+		var fullpath string
+		if filepath.IsAbs(filename) {
+			fullpath = filename
+		} else {
+			fullpath = filepath.Join(basepath, filename)
+		}
 
 		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			continue
@@ -100,7 +105,6 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 
 	// parse manifest
 	m := Manifest{}
-	b := Manifest{}
 
 	if len(ec.Extends) > 0 {
 		bm, err := readManifest(filepath.Dir(path), []string{ec.Extends})
@@ -108,7 +112,6 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 			return Manifest{}, err
 		}
 		m = bm
-		b = bm
 	}
 
 	m.filepath = path
@@ -116,8 +119,6 @@ func readManifest(basepath string, paths []string) (Manifest, error) {
 	if err := yaml2.UnmarshalStrict(file, &m); err != nil {
 		return Manifest{}, fmt.Errorf("failed to parse manifest yaml (%s), %v", path, err)
 	}
-
-	m.Layers = append(b.Layers, m.Layers...)
 
 	return m, nil
 }
@@ -127,7 +128,7 @@ type Manifest struct {
 	ExtendsConfig  `yaml:",inline"`
 	MetadataConfig `yaml:",inline"`
 	Config         Config         `yaml:"config"`
-	Layers         []LayerConfig  `yaml:"layers"`
+	Layers         LayerList      `yaml:"layers"`
 	Properties     PropertyList   `yaml:"properties"`
 	Outputs        []OutputConfig `yaml:"outputs"`
 }
@@ -148,6 +149,24 @@ func (m Manifest) Filepath() string {
 type Config struct {
 	Parameters ParameterConfig `yaml:"parameters"`
 	Sources    SourceConfig    `yaml:"sources"`
+}
+
+type LayerList []LayerConfig
+
+func (s *LayerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawLayerList LayerList
+
+	raw := rawLayerList{}
+
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	ll := LayerList(raw)
+	ll = append(*s, ll...)
+	*s = ll
+
+	return nil
 }
 
 type LayerConfig struct {
