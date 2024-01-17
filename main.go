@@ -87,6 +87,7 @@ func createApp() (*cli.App, config.AppContext) {
 			command.Export(metadata),
 			command.Read(metadata),
 			command.Write(metadata),
+			command.Config(metadata),
 			command.UI(metadata, staticFiles),
 		},
 		Before: func(c *cli.Context) error {

@@ -43,6 +43,7 @@
 - [x] Tagging of AWS SSM parameters using default tags (owner + version) and labels
 - [x] Fix: Allow base config to define layers (currently, base layers are replaced by layers in defined by referencing config)
 - [x] Fix: If base config has layers but referencing config does not, validation error for "duplicate layer" is triggered.
+- [x] Added config show command to display the final configuration (after merge with base configs)
 
 - [ ] (in-progress) Initial round of real world testing
 
