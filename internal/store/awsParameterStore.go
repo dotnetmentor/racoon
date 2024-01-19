@@ -42,7 +42,7 @@ func (s *AwsParameterStore) Read(ctx config.AppContext, layer api.Layer, key str
 	ctx.Log.Debugf("reading %s from %s", psk, config.SourceTypeAwsParameterStore)
 	out, err := s.client.GetParameter(ctx.Context, &ssm.GetParameterInput{
 		Name:           &psk,
-		WithDecryption: true,
+		WithDecryption: aws.Bool(true),
 	})
 	if err != nil {
 		var notFound *ssmtypes.ParameterNotFound
@@ -73,7 +73,7 @@ func (s *AwsParameterStore) Write(ctx config.AppContext, key, value, description
 		Value:       &value,
 		Type:        ssmtypes.ParameterTypeSecureString,
 		Tier:        ssmtypes.ParameterTierStandard,
-		Overwrite:   true,
+		Overwrite:   aws.Bool(true),
 	}
 
 	if sourceConfig.KmsKey != "" {
