@@ -51,10 +51,9 @@
 - [ ] Feature: Validation options, Value type (Int, String, Bool etc)
 - [ ] Feature: Validation options, Value match Regexp (.\*)
 - [ ] Feature: Validation options, String values - MinLength: 3, MaxLength: 16 etc
-- [ ] Feature: Caching for sources during a single run
 - [ ] Feature: Allow layers to be defined in separate files
+- [ ] Feature: Allow generating values to help with seeding the store (based on validation rules)
+- [ ] Feature: Caching for sources during a single run
 - [ ] Feature: Use config.sources as a way to enable the use of a source (if not specified, then it's not enabled)?
-- [ ] Feature: Allow generating values to help with seeding the store
 - [ ] Feature: Allow enforcing senitive values can't be written to "unsafe" store
-- [ ] Feature: run export with --watch to have racoon running in the background, watching for changes
 - [ ] Feature: UI: ... what do we need to make it helpful to devs and administrators?

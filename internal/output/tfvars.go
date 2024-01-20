@@ -14,16 +14,16 @@ type Tfvars struct {
 	PathSeparator string `yaml:"pathSeparator"`
 }
 
-func (o Tfvars) Type() string {
-	return "tfvars"
-}
-
 func NewTfvars() Tfvars {
 	return Tfvars{
 		Lowercase:     true,
 		WordSeparator: "_",
 		PathSeparator: "_",
 	}
+}
+
+func (o Tfvars) Type() string {
+	return "tfvars"
 }
 
 func (o Tfvars) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {

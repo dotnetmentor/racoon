@@ -12,15 +12,16 @@ type Json struct {
 	Stuctured bool `yaml:"structured"`
 }
 
-func (o Json) Type() string {
-	return "json"
-}
-
 func NewJson() Json {
 	return Json{
 		Stuctured: true,
 	}
 }
+
+func (o Json) Type() string {
+	return "json"
+}
+
 func (o Json) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {
 	jo := make(Dict)
 	for _, k := range keys {

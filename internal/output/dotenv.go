@@ -17,10 +17,6 @@ type Dotenv struct {
 	PathSeparator string `yaml:"pathSeparator"`
 }
 
-func (o Dotenv) Type() string {
-	return "dotenv"
-}
-
 func NewDotenv() Dotenv {
 	return Dotenv{
 		Sort:          false,
@@ -29,6 +25,10 @@ func NewDotenv() Dotenv {
 		WordSeparator: "_",
 		PathSeparator: "_",
 	}
+}
+
+func (o Dotenv) Type() string {
+	return "dotenv"
 }
 
 func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {
