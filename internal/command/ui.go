@@ -159,12 +159,8 @@ func compareHandler(ctx config.AppContext, manifestPath string) func(w http.Resp
 			}
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-
-		js, err := json.Marshal(response)
-		if err == nil {
-			w.Write(js)
+		if err := JsonRespone(w, statusCode, response); err != nil {
+			ctx.Log.Errorf("error writing response: %v", err)
 		}
 	}
 }
@@ -202,4 +198,15 @@ func createRedirector(ctx config.AppContext, fsys fs.FS) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func JsonRespone(w http.ResponseWriter, statusCode int, response interface{}) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+
+	js, err := json.Marshal(response)
+	if err == nil {
+		w.Write(js)
+	}
+	return nil
 }
