@@ -4,6 +4,6 @@ output/*.tfvars
 output/*.json
 racoon.y*ml
 dist/
+temp/
 .vscode/
-
 ./*local.env
