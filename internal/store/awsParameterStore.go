@@ -14,6 +14,7 @@ import (
 
 	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
+	"github.com/dotnetmentor/racoon/internal/environment"
 	"github.com/dotnetmentor/racoon/internal/utils"
 )
 
@@ -120,7 +121,7 @@ func (s *AwsParameterStore) Write(ctx config.AppContext, key, value, description
 }
 
 func newParameterStoreClient(ctx context.Context) (*ssm.Client, error) {
-	if awsRegion := utils.StringEnvVar("AWS_REGION", ""); awsRegion == "" {
+	if awsRegion := environment.StringVar("AWS_REGION", ""); awsRegion == "" {
 		return nil, fmt.Errorf("required environment variable AWS_REGION has no value set")
 	}
 

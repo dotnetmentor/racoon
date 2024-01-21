@@ -26,3 +26,20 @@ func SliceDelete[T any](slice []T, match func(i T) bool) (result []T) {
 	}
 	return
 }
+
+func SliceTake[T any](slice []T, n int) (result []T) {
+	min := Min(len(slice), n)
+	for i := 0; i < min; i++ {
+		result = append(result, slice[i])
+	}
+	return
+}
+
+func SliceSkip[T any](slice []T, n int) (result []T) {
+	if n > 0 && n < len(slice) {
+		result = slice[n:]
+	} else {
+		result = slice
+	}
+	return
+}
