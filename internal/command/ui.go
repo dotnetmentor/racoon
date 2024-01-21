@@ -196,17 +196,17 @@ func filterConfigs(configs []httpapi.ConfigQueryItem, filters []string) (filtere
 			kv := strings.Split(f, "/")
 			key := kv[0]
 			value := kv[1]
-			if key == "name" {
-				key = value
-				value = "racoon.config"
-			}
 			filtersByGroup[key] = append(filtersByGroup[key], value)
 		}
 
 		for key, values := range filtersByGroup {
 			match := false
 			for _, v := range values {
-				if strings.Contains(c.Path, fmt.Sprintf("%s/%s", key, v)) {
+				searchStr := fmt.Sprintf("%s/%s", key, v)
+				if key == "name" {
+					searchStr = fmt.Sprintf("%s/%s", v, "racoon.config")
+				}
+				if strings.Contains(c.Path, searchStr) {
 					match = true
 					c.Matches++
 				}
