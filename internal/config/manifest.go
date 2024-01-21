@@ -147,8 +147,8 @@ func (m Manifest) Filepath() string {
 }
 
 type Config struct {
-	Parameters ParameterConfig `yaml:"parameters"`
-	Sources    SourceConfig    `yaml:"sources"`
+	Parameters ParameterConfigList `yaml:"parameters"`
+	Sources    SourceConfig        `yaml:"sources"`
 }
 
 type LayerList []LayerConfig
@@ -215,9 +215,19 @@ func (l PropertyList) Remove(pl PropertyList) (properties PropertyList) {
 	})
 }
 
-type ParameterConfig map[string]ParameterRule
+type ParameterConfigList []ParameterConfig
 
-type ParameterRule struct {
+func (p ParameterConfigList) HasKey(k string) bool {
+	for _, r := range p {
+		if r.Key == k {
+			return true
+		}
+	}
+	return false
+}
+
+type ParameterConfig struct {
+	Key      string `yaml:"key"`
 	Required bool   `yaml:"required"`
 	Regexp   string `yaml:"regexp"`
 }
@@ -374,7 +384,7 @@ func (m *Manifest) GetLayers(ctx AppContext) (layers []LayerConfig, err error) {
 	return
 }
 
-func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool, err error) {
+func (l *LayerConfig) Matches(op OrderedParameterList, ctx AppContext) (match bool, err error) {
 	match = true
 
 	for _, expr := range l.Match {
@@ -384,7 +394,7 @@ func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool, err err
 			err = fmt.Errorf("matching layer %s against parameters failed, %v", l.Name, e)
 			break
 		}
-		if pv, ok := p[k]; ok {
+		if pv, ok := op.Value(k); ok {
 			if !m.Match(pv) {
 				match = false
 				break
@@ -396,9 +406,9 @@ func (l *LayerConfig) Matches(p Parameters, ctx AppContext) (match bool, err err
 	}
 
 	if match {
-		ctx.Log.Debugf("matched layer %s against parameters (conditions=%v parameters=%v)", l.Name, l.Match, p)
+		ctx.Log.Debugf("matched layer %s against parameters (conditions=%v parameters=%v)", l.Name, l.Match, op)
 	} else {
-		ctx.Log.Debugf("layer %s did not match parameters (conditions=%v parameters=%v)", l.Name, l.Match, p)
+		ctx.Log.Debugf("layer %s did not match parameters (conditions=%v parameters=%v)", l.Name, l.Match, op)
 	}
 
 	return

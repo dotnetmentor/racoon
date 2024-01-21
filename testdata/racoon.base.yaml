@@ -1,8 +1,10 @@
 config:
   parameters:
-    context:
+    - key: context
       required: true
-    tenant:
+    - key: user
+      required: false
+    - key: tenant
       required: false
   sources:
     awsParameterStore:

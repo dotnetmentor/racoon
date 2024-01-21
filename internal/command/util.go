@@ -38,7 +38,7 @@ func newContext(c *cli.Context, metadata config.AppMetadata, validateParams bool
 		}
 	}
 
-	ctx.Parameters = p
+	ctx.Parameters = p.Ordered(ctx.Manifest.Config.Parameters)
 	ctx.Context = c.Context
 
 	return ctx, nil

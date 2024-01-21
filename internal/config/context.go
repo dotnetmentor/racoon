@@ -18,7 +18,7 @@ type AppContext struct {
 	Log        *logrus.Logger
 	Metadata   AppMetadata
 	Manifest   Manifest
-	Parameters Parameters
+	Parameters OrderedParameterList
 }
 
 type AppMetadata struct {

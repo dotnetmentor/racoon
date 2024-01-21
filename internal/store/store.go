@@ -27,10 +27,10 @@ func (vs *ValueStore) Read(layer api.Layer, key string, sensitive bool, source *
 	case config.SourceTypeParameter:
 		if len(*source.Parameter) > 0 {
 			key := *source.Parameter
-			if v, ok := vs.context.Parameters[key]; ok {
-				return api.NewValue(api.NewValueSource(layer, api.SourceTypeParameter), key, v, nil, sensitive)
+			if pv, ok := vs.context.Parameters.Value(key); ok {
+				return api.NewValue(api.NewValueSource(layer, api.SourceTypeParameter), key, pv, nil, sensitive)
 			} else {
-				return api.NewValue(api.NewValueSource(layer, api.SourceTypeParameter), key, v, api.NewNotFoundError(nil, key, api.SourceTypeParameter), sensitive)
+				return api.NewValue(api.NewValueSource(layer, api.SourceTypeParameter), key, pv, api.NewNotFoundError(nil, key, api.SourceTypeParameter), sensitive)
 			}
 		}
 

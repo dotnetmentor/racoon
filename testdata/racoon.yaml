@@ -1,6 +1,7 @@
 extends: ./racoon.base.yaml
 
 name: racoon-e2e-tests
+
 labels:
   Environment: "{context}"
   ManagedBy: racoon
