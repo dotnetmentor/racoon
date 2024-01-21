@@ -44,6 +44,8 @@
 - [x] Fix: Allow base config to define layers (currently, base layers are replaced by layers in defined by referencing config)
 - [x] Fix: If base config has layers but referencing config does not, validation error for "duplicate layer" is triggered.
 - [x] Added config show command to display the final configuration (after merge with base configs)
+- [x] Basic implementation of a backend for configurations (with support for AWS S3 and KMS)
+- [x] Basic UI for view backend configurations
 
 - [ ] (in-progress) Initial round of real world testing
 
