@@ -52,6 +52,9 @@ var _ = Describe("Manifest", func() {
 				}
 
 				expected := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "racoon",
+					},
 					Layers: []config.LayerConfig{
 						{
 							Name: "layer1",
@@ -75,6 +78,9 @@ var _ = Describe("Manifest", func() {
 		When("parsing manifest with base file", func() {
 			It("can parse layers from base only", func() {
 				base := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "base",
+					},
 					ExtendsConfig: config.ExtendsConfig{},
 					Layers: []config.LayerConfig{
 						{
@@ -89,6 +95,9 @@ var _ = Describe("Manifest", func() {
 				}
 
 				manifest := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "racoon",
+					},
 					ExtendsConfig: config.ExtendsConfig{
 						Extends: bf.Name(),
 					},
@@ -108,6 +117,9 @@ var _ = Describe("Manifest", func() {
 
 			It("can parse layers from both base and extending manifest", func() {
 				base := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "base",
+					},
 					ExtendsConfig: config.ExtendsConfig{},
 					Layers: []config.LayerConfig{
 						{
@@ -122,6 +134,9 @@ var _ = Describe("Manifest", func() {
 				}
 
 				manifest := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "racoon",
+					},
 					ExtendsConfig: config.ExtendsConfig{
 						Extends: bf.Name(),
 					},
@@ -147,6 +162,9 @@ var _ = Describe("Manifest", func() {
 
 			It("can parse layers from both base and extending manifest", func() {
 				base := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "base",
+					},
 					ExtendsConfig: config.ExtendsConfig{},
 				}
 				bf, err := NewTempManifestFile(base, "base-*.yaml")
@@ -156,6 +174,9 @@ var _ = Describe("Manifest", func() {
 				}
 
 				manifest := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "racoon",
+					},
 					ExtendsConfig: config.ExtendsConfig{
 						Extends: bf.Name(),
 					},
@@ -180,6 +201,9 @@ var _ = Describe("Manifest", func() {
 
 			It("produces error when one layer exists in both manifests", func() {
 				base := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "base",
+					},
 					ExtendsConfig: config.ExtendsConfig{},
 					Layers: []config.LayerConfig{
 						{
@@ -194,6 +218,9 @@ var _ = Describe("Manifest", func() {
 				}
 
 				manifest := config.Manifest{
+					MetadataConfig: config.MetadataConfig{
+						Name: "racoon",
+					},
 					ExtendsConfig: config.ExtendsConfig{
 						Extends: bf.Name(),
 					},

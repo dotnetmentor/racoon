@@ -57,6 +57,10 @@ func NewManifest(paths []string) (Manifest, error) {
 	}
 
 	// TODO: Validate manifest config
+	if len(m.Name) == 0 {
+		return m, fmt.Errorf("name is required")
+	}
+
 	layers := make(map[string]interface{})
 	for _, l := range m.Layers {
 		if _, ok := layers[l.Name]; ok {
