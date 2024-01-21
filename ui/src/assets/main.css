@@ -1,20 +1,10 @@
-/* Pink Light scheme (Default) */
-/* Can be forced with data-theme="light" */
-[data-theme="light"],
-:root:not([data-theme="dark"]) {
-  --primary: #d81b60;
-  --primary-hover: #c2185b;
-  --primary-focus: rgba(216, 27, 96, 0.25);
-  --primary-inverse: #FFF;
-}
-
 /* Pink Dark scheme (Auto) */
 /* Automatically enabled if user has Dark mode enabled */
 @media only screen and (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --primary: #d81b60;
-    --primary-hover: #e91e63;
-    --primary-focus: rgba(216, 27, 96, 0.5);
+    --primary: #e98db0;
+    --primary-hover: #ff4e91;
+    --primary-focus: #ff4e924f;
     --primary-inverse: #FFF;
   }
 }
@@ -22,19 +12,25 @@
 /* Pink Dark scheme (Forced) */
 /* Enabled if forced with data-theme="dark" */
 [data-theme="dark"] {
-  --primary: #d81b60;
-  --primary-hover: #e91e63;
-  --primary-focus: rgba(216, 27, 96, 0.5);
+  --primary: #e98db0;
+  --primary-hover: #ff4e91;
+  --primary-focus: #ff4e924f;
   --primary-inverse: #FFF;
 }
 
 /* Pink (Common styles) */
 :root {
-  --font-size: 14px;
+  --font-size: 16px;
   --form-element-active-border-color: var(--primary);
   --form-element-focus-color: var(--primary-focus);
   --switch-color: var(--primary-inverse);
   --switch-checked-background-color: var(--primary);
+}
+
+@media (hover: hover) {
+  a:hover {
+    background-color: hsla(160, 100%, 37%, 0.2);
+  }
 }
 
 #app {
@@ -45,9 +41,60 @@
 
 header h1 {margin-bottom: 0;}
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+table tbody th,
+table tbody td {
+  vertical-align: baseline;
 }
 
+table tbody td details {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+mark {
+  background-color: #d1ac84;
+}
+
+.config-grid article {
+  margin-bottom: 1rem;
+  padding: calc(var(--block-spacing-vertical) * .5) var(--block-spacing-horizontal)
+}
+.config-grid article>header {
+  margin-bottom: calc(var(--block-spacing-vertical) * .5);
+}
+
+article header hgroup {
+  margin-bottom: 0;
+}
+article header .tags kbd {
+  font-size: .8rem;
+}
+
+.tags {
+  line-height: 2rem;
+}
+.tags .label kbd {
+  background-color: #8d96e9
+}
+.tags .filter kbd {
+  cursor: pointer;
+  background-color: var(--primary);
+}
+.tags .filter.search kbd {
+  color: var(--primary-hover);
+  background-color: #ffffff20;
+}
+.tags .filter.active kbd {
+  color: var(--primary-hover);
+  background-color: #FFF;
+}
+
+.decrypt {
+  float: right;
+  font-weight: normal;
+}
+
+dialog article {
+  min-width: 600px;
+}
