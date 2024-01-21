@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 
+	"github.com/dotnetmentor/racoon/internal/environment"
 	"github.com/sirupsen/logrus"
 )
 
@@ -45,6 +46,22 @@ func NewContext(metadata AppMetadata, paths ...string) (AppContext, error) {
 		Metadata: metadata,
 		Manifest: m,
 	}
+	if err != nil {
+		return c, err
+	}
 
-	return c, err
+	backendEnabled, err := environment.BoolVar("RACOON_BACKEND_ENABLED", m.Backend.Enabled)
+	if err != nil {
+		return c, err
+	}
+
+	if backendEnabled != m.Backend.Enabled {
+		if backendEnabled {
+			c.Log.Warn("enabled backend, RACOON_BACKEND_ENABLED environment variable set to true")
+		} else {
+			c.Log.Warn("disabled backend, RACOON_BACKEND_ENABLED environment variable set to false")
+		}
+	}
+
+	return c, nil
 }

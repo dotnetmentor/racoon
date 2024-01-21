@@ -1,6 +1,9 @@
 package command
 
 import (
+	"fmt"
+
+	"github.com/dotnetmentor/racoon/internal/backend"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -42,4 +45,18 @@ func newContext(c *cli.Context, metadata config.AppMetadata, validateParams bool
 	ctx.Context = c.Context
 
 	return ctx, nil
+}
+
+func newBackend(ctx config.AppContext) (backend.Backend, error) {
+	if ctx.Manifest.Backend.Enabled {
+		if ctx.Manifest.Name == "" {
+			return nil, fmt.Errorf("manifest name must be set in order to use backend")
+		}
+		backend, err := backend.New(ctx.Context, ctx.Manifest.Backend)
+		if err != nil {
+			return nil, err
+		}
+		return backend, nil
+	}
+	return nil, nil
 }

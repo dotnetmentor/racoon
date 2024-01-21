@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/dotnetmentor/racoon/internal/backend"
 	"github.com/dotnetmentor/racoon/internal/output"
 	"github.com/dotnetmentor/racoon/internal/utils"
 
@@ -127,10 +128,11 @@ type Manifest struct {
 	filepath       string
 	ExtendsConfig  `yaml:",inline"`
 	MetadataConfig `yaml:",inline"`
-	Config         Config         `yaml:"config"`
-	Layers         LayerList      `yaml:"layers"`
-	Properties     PropertyList   `yaml:"properties"`
-	Outputs        []OutputConfig `yaml:"outputs"`
+	Backend        backend.BackendConfig `yaml:"backend"`
+	Config         Config                `yaml:"config"`
+	Layers         LayerList             `yaml:"layers"`
+	Properties     PropertyList          `yaml:"properties"`
+	Outputs        []OutputConfig        `yaml:"outputs"`
 }
 
 type ExtendsConfig struct {

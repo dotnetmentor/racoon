@@ -2,6 +2,7 @@ package command
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -72,6 +73,13 @@ func Export(metadata config.AppMetadata) *cli.Command {
 			keys := []string{}
 			values := map[string]api.Value{}
 
+			backend, err := newBackend(ctx)
+			if err != nil {
+				return err
+			}
+
+			encconf := api.NewEncryptedConfig(m, ctx.Parameters, backend)
+
 			visit := visitor.New(ctx)
 
 			err = visit.Init(excludes, includes)
@@ -81,6 +89,10 @@ func Export(metadata config.AppMetadata) *cli.Command {
 
 			err = visit.Property(func(p api.Property, err error) (bool, error) {
 				if err != nil {
+					return false, err
+				}
+
+				if err := encconf.Track(p); err != nil {
 					return false, err
 				}
 
@@ -118,6 +130,18 @@ func Export(metadata config.AppMetadata) *cli.Command {
 			})
 			if err != nil {
 				return err
+			}
+
+			// track encrypted config
+			if backend != nil {
+				jb, err := json.Marshal(&encconf)
+				if err != nil {
+					return err
+				}
+
+				if err := backend.Store().Upload(encconf.Path(), jb); err != nil {
+					return err
+				}
 			}
 
 			// output
