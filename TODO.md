@@ -46,10 +46,17 @@
 - [x] Added config show command to display the final configuration (after merge with base configs)
 - [x] Basic implementation of a backend for configurations (with support for AWS S3 and KMS)
 - [x] Basic UI for view backend configurations
+- [x] Allow enabling and disabling backend usage using RACOON_BACKEND_ENABLED=true/false
 
 - [ ] (in-progress) Initial round of real world testing
 
+- [ ] Fix: Read command must match argument to a single property, no property match should be an error
+- [ ] Fix: Optional properties should not be exported to EncryptedConfig
+- [ ] Fix: Bad logging (racoon WARN[0000] dotenv file local.env was not found ... racoon DEBU[0000] dotenv file local.env loaded)
+- [ ] Fix: Should sort apply to the remapped keys? In other words, do we sort after remapping?
 - [ ] More tests on multiple levels and components (e2e, unit etc)
+- [ ] Feature: Cleanup command to remove files specified in outputs
+- [ ] Feature: Conditional outputs, based on same matching method as layers
 - [ ] Feature: Validation options, Value type (Int, String, Bool etc)
 - [ ] Feature: Validation options, Value match Regexp (.\*)
 - [ ] Feature: Validation options, String values - MinLength: 3, MaxLength: 16 etc

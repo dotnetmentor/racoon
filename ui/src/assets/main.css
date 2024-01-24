@@ -3,9 +3,10 @@
 @media only screen and (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --primary: #e98db0;
-    --primary-hover: #ff4e91;
-    --primary-focus: #ff4e924f;
+    --primary-hover: #d58de9;
+    --primary-focus: #4e3555;
     --primary-inverse: #FFF;
+    --background-color: #11111f;
   }
 }
 
@@ -13,9 +14,10 @@
 /* Enabled if forced with data-theme="dark" */
 [data-theme="dark"] {
   --primary: #e98db0;
-  --primary-hover: #ff4e91;
-  --primary-focus: #ff4e924f;
+  --primary-hover: #d58de9;
+  --primary-focus: #4e3555;
   --primary-inverse: #FFF;
+  --background-color: #11111f;
 }
 
 /* Pink (Common styles) */
@@ -25,6 +27,10 @@
   --form-element-focus-color: var(--primary-focus);
   --switch-color: var(--primary-inverse);
   --switch-checked-background-color: var(--primary);
+}
+
+nav a {
+  font-weight: bold;
 }
 
 @media (hover: hover) {
@@ -39,7 +45,20 @@
   font-weight: normal;
 }
 
-header h1 {margin-bottom: 0;}
+header {
+  margin-bottom: 1rem;
+}
+header h1 {
+  margin-bottom: 0;
+  color: #28284a;
+}
+header h1 .ov-icon {
+  vertical-align: -1rem;
+  margin-left: -1.5rem;
+}
+header nav {
+  border-bottom: 1px solid #28284a;
+}
 
 table tbody th,
 table tbody td {
@@ -56,6 +75,41 @@ mark {
   background-color: #d1ac84;
 }
 
+.tags {
+  line-height: 2rem;
+}
+.tags .label kbd {
+  background-color: #918de9;
+  margin-right: .4rem;
+}
+.tags .filter kbd {
+  cursor: pointer;
+  background-color: var(--primary);
+  margin-right: .4rem;
+}
+.tags .filter kbd:hover {
+  background-color: var(--primary-hover);
+}
+.tags .filter.search kbd {
+  background-color: var(--primary-focus);
+}
+.tags .filter.active kbd {
+  background-color: var(--primary-hover);
+}
+
+.decrypt {
+  float: right;
+  font-weight: normal;
+}
+a.decrypt:hover {
+  cursor: pointer;
+  background-color: transparent;
+}
+
+dialog article {
+  min-width: 760px;
+}
+
 .config-grid article {
   margin-bottom: 1rem;
   padding: calc(var(--block-spacing-vertical) * .5) var(--block-spacing-horizontal)
@@ -70,31 +124,6 @@ article header hgroup {
 article header .tags kbd {
   font-size: .8rem;
 }
-
-.tags {
-  line-height: 2rem;
-}
-.tags .label kbd {
-  background-color: #8d96e9
-}
-.tags .filter kbd {
-  cursor: pointer;
-  background-color: var(--primary);
-}
-.tags .filter.search kbd {
-  color: var(--primary-hover);
-  background-color: #ffffff20;
-}
-.tags .filter.active kbd {
-  color: var(--primary-hover);
-  background-color: #FFF;
-}
-
-.decrypt {
-  float: right;
-  font-weight: normal;
-}
-
-dialog article {
-  min-width: 600px;
+article header .tags .filter kbd {
+  background-color: var(--primary-hover);
 }

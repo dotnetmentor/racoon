@@ -75,43 +75,51 @@ export default {
       } catch (e) {
         console.error(e)
         this.error = e
-        this.loading = false
       } finally {
         this.loading = false
       }
     },
 
-    async decryptConfig(config) {
-      if (!config.encrypted) {
-        return
+    async decryptConfig(config, index) {
+      try {
+        if (!config.encrypted) {
+          return
+        }
+        config.decrypting = true
+
+        console.log('decrypting config', config)
+        this.error = null
+
+        let url = `/api/command/config/decrypt`
+        let request = {
+          path: config.path,
+        }
+        console.log('fetching data', url, request)
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(request),
+        })
+
+        const data = await response.json()
+        console.log('handling decryption response', data)
+
+        if (data.error) {
+          throw data.error
+        }
+
+        console.log('decrypted config', config)
+        config.properties = data.data.properties
+        config.encrypted = false
+        this.configs[index] = config
+      } catch (e) {
+        console.error(e)
+        this.error = e
+      } finally {
+        config.decrypting = false
       }
-
-      console.log('decrypting config', config)
-      this.error = null
-
-      let url = `/api/command/config/decrypt`
-      let request = {
-        path: config.path,
-      }
-      console.log('fetching data', url, request)
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(request),
-      })
-
-      const data = await response.json()
-      console.log('handling decryption response', data)
-
-      if (data.error) {
-        throw data.error
-      }
-
-      console.log('decrypted config', config)
-      config.properties = data.data.properties
-      config.encrypted = false
     },
 
     handleQueryResponse(data, download, append) {
@@ -236,7 +244,10 @@ export default {
       this.filterConfigs()
     },
 
-    toggleProperty(p) {
+    toggleProperty(p, encrypted) {
+      if (p) {
+        p.encrypted = encrypted
+      }
       this.property = p
     },
 
@@ -317,10 +328,10 @@ export default {
       <div class="grid" v-for="page in pagedFilters">
         <div v-for="values in page">
           <span class="tags">
-            <strong>{{ values[0].key }}:</strong>&nbsp;<br />
+            <strong>{{ values[0].key }}:</strong><br />
             <span v-for="f in values"
               :class="{ 'filter': true, 'active': f.active, 'search': searchFilters.includes(`${f.key}=${f.value}`) }">
-              <kbd @click="() => toggleFilter(f, f.key)">{{ f.value }}</kbd>&nbsp;
+              <kbd @click="() => toggleFilter(f, f.key)">{{ f.value }}</kbd>
             </span>
           </span>
         </div>
@@ -343,7 +354,7 @@ export default {
         configuration(s) loaded from the server.<br />
         <mark><strong>{{ matching }}</strong></mark> matching at least 1 of the selected filter(s).
       </p>
-      <div>&nbsp</div>
+      <div>&nbsp;</div>
       <div>
         <button class="secondary" v-if="searchChanged === true" @click="() => queryConfigs(activeFilters.length, 0)">
           Search
@@ -357,21 +368,23 @@ export default {
 
     <div v-if="activeFilters.length && pages.length" v-for="page in pages">
       <div class="config-grid grid">
-        <article v-for="c in page">
+        <article v-for="c, index in page">
           <header>
             <hgroup>
               <h5>
                 {{ c.name }}
-                <a v-if="c.encrypted" class="decrypt" @click="() => decryptConfig(c)">Decrypt</a>
+                <a v-if="c.encrypted" class="decrypt" @click="() => decryptConfig(c, index)">
+                  <v-icon name="fa-unlock-alt" scale="1" :animation="c.decrypting ? 'float' : 'none'" title="Decrypt" />
+                </a>
               </h5>
               <div class="tags">
                 <template v-for="v, k in c.filters">
                   <span v-if:="k !== 'name'" class="filter">
-                    <kbd>{{ k }} = {{ v }}</kbd>&nbsp;
+                    <kbd>{{ k }} = {{ v }}</kbd>
                   </span>
                 </template>
                 <span v-for="v, k in c.labels" class="label">
-                  <kbd>{{ k }} = {{ v }}</kbd>&nbsp;
+                  <kbd>{{ k }} = {{ v }}</kbd>
                 </span>
               </div>
             </hgroup>
@@ -383,15 +396,16 @@ export default {
                 <thead>
                   <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Property</th>
+                    <th scope="col" colspan="2">Property</th>
                     <th scope="col">Value</th>
                   </tr>
                 </thead>
                 <tbody>
                   <template v-for="p, i in c.properties">
-                    <tr @click="() => toggleProperty(p)">
+                    <tr @click="() => toggleProperty(p, c.encrypted)">
                       <th scope="row">{{ i + 1 }}</th>
                       <td>{{ p.name }}</td>
+                      <td><v-icon name="fa-shield-alt" size="1" title="Sensitive" v-if="p.sensitive" /></td>
                       <td>
                         <b v-if="p.sensitive && c.encrypted">{{ '<sensitive>' }}</b>
                         <span v-else>{{ p.value }}</span>
@@ -427,8 +441,11 @@ export default {
           </hgroup>
         </header>
         <div>
-          <b v-if="property.sensitive">{{ '<sensitive>' }}</b>
-          <span v-else>{{ property.value }}</span>
+          <p v-if="property.sensitive">
+            <v-icon name="fa-shield-alt" size="1" title="Sensitive" />
+            Property holds sensitive data, treat decrypted values with care!<br /><br />
+          </p>
+          <pre><code>{{ property.sensitive && property.encrypted ? '<sensitive>' : property.value }}</code></pre>
         </div>
       </article>
     </dialog>
