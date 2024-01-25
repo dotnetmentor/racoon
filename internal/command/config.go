@@ -11,14 +11,14 @@ import (
 func Config(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:      "config",
-		Usage:     "Manage configuration",
+		Usage:     "Manages configuration",
 		UsageText: "",
 		Hidden:    false,
 		Flags:     []cli.Flag{},
 		Subcommands: []*cli.Command{
 			{
 				Name:      "show",
-				Usage:     "Show configuration",
+				Usage:     "Shows the current configuration",
 				UsageText: "",
 				Action: func(c *cli.Context) error {
 					ctx, err := newContext(c, metadata, false)

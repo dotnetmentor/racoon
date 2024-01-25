@@ -18,7 +18,7 @@ import (
 func Export(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "export",
-		Usage: "export values",
+		Usage: "Exports the values of multiple properties",
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:    "parameter",

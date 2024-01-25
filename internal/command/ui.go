@@ -26,7 +26,7 @@ import (
 func UI(metadata config.AppMetadata, fs embed.FS) *cli.Command {
 	return &cli.Command{
 		Name:      "ui",
-		Usage:     "Exposes a UI over HTTP",
+		Usage:     "Exposes the racoon UI over HTTP",
 		UsageText: "",
 		Hidden:    false,
 		Flags:     []cli.Flag{},

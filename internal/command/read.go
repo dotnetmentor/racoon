@@ -13,7 +13,7 @@ import (
 func Read(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "read",
-		Usage: "reads a single value",
+		Usage: "Reads the value of a single property",
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:    "parameter",

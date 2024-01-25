@@ -19,7 +19,7 @@ import (
 func Write(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "write",
-		Usage: "write values for properties defined in the manifest file",
+		Usage: "Writes values to writable sources",
 		Flags: []cli.Flag{
 			&cli.StringSliceFlag{
 				Name:    "parameter",
