@@ -9,12 +9,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func newContext(c *cli.Context, metadata config.AppMetadata, validateParams bool) (config.AppContext, error) {
+func manifestPaths(c *cli.Context) []string {
 	paths := config.DefaultManifestYamlFiles
 	manifest := c.String("manifest")
 	if manifest != "" {
 		paths = []string{manifest}
 	}
+	return paths
+}
+
+func newContext(c *cli.Context, metadata config.AppMetadata, validateParams bool) (config.AppContext, error) {
+	paths := manifestPaths(c)
 	ctx, err := config.NewContext(metadata, paths...)
 	if err != nil {
 		ctx.Log.Error(err)

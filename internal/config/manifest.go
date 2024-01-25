@@ -132,20 +132,20 @@ type Manifest struct {
 	filepath       string
 	ExtendsConfig  `yaml:",inline"`
 	MetadataConfig `yaml:",inline"`
-	Backend        backend.BackendConfig `yaml:"backend"`
-	Config         Config                `yaml:"config"`
-	Layers         LayerList             `yaml:"layers"`
-	Properties     PropertyList          `yaml:"properties"`
-	Outputs        []OutputConfig        `yaml:"outputs"`
+	Backend        backend.BackendConfig `yaml:"backend,omitempty"`
+	Config         Config                `yaml:"config,omitempty"`
+	Layers         LayerList             `yaml:"layers,omitempty"`
+	Properties     PropertyList          `yaml:"properties,omitempty"`
+	Outputs        OutputList            `yaml:"outputs,omitempty"`
 }
 
 type ExtendsConfig struct {
-	Extends string `yaml:"extends"`
+	Extends string `yaml:"extends,omitempty"`
 }
 
 type MetadataConfig struct {
 	Name   string            `yaml:"name"`
-	Labels map[string]string `yaml:"labels"`
+	Labels map[string]string `yaml:"labels,omitempty"`
 }
 
 func (m Manifest) Filepath() string {
@@ -153,8 +153,8 @@ func (m Manifest) Filepath() string {
 }
 
 type Config struct {
-	Parameters ParameterConfigList `yaml:"parameters"`
-	Sources    SourceConfig        `yaml:"sources"`
+	Parameters ParameterConfigList `yaml:"parameters,omitempty"`
+	Sources    SourceConfig        `yaml:"sources,omitempty"`
 }
 
 type LayerList []LayerConfig
@@ -235,7 +235,7 @@ func (p ParameterConfigList) HasKey(k string) bool {
 type ParameterConfig struct {
 	Key      string `yaml:"key"`
 	Required bool   `yaml:"required"`
-	Regexp   string `yaml:"regexp"`
+	Regexp   string `yaml:"regexp,omitempty"`
 }
 
 type SourceConfig struct {
@@ -288,7 +288,7 @@ type PropertyConfig struct {
 	Sensitive   bool               `yaml:"sensitive,omitempty"`
 	Source      *ValueSourceConfig `yaml:"source,omitempty"`
 	Format      []FormattingConfig `yaml:"format,omitempty"`
-	Rules       RuleConfig         `yaml:"rules"`
+	Rules       RuleConfig         `yaml:"rules,omitempty"`
 }
 
 func (s *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -365,15 +365,17 @@ type ValueFromAwsParameterStore struct {
 	TreatNotFoundAsError *bool  `yaml:"treatNotFoundAsError"`
 }
 
+type OutputList []OutputConfig
+
 type OutputConfig struct {
-	Type    OutputType             `yaml:"type"`
-	Alias   string                 `yaml:"alias"`
-	Paths   []string               `yaml:"paths"`
-	Map     map[string]string      `yaml:"map"`
-	Include []string               `yaml:"include"`
-	Exclude []string               `yaml:"exclude"`
-	Config  map[string]interface{} `yaml:"config"`
-	Export  ExportType             `yaml:"export"`
+	Type    OutputType             `yaml:"type,omitempty"`
+	Alias   string                 `yaml:"alias,omitempty"`
+	Paths   []string               `yaml:"paths,omitempty"`
+	Map     map[string]string      `yaml:"map,omitempty"`
+	Include []string               `yaml:"include,omitempty"`
+	Exclude []string               `yaml:"exclude,omitempty"`
+	Config  map[string]interface{} `yaml:"config,omitempty"`
+	Export  ExportType             `yaml:"export,omitempty"`
 	output  output.Output
 }
 

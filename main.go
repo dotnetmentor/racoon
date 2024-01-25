@@ -73,7 +73,7 @@ func createApp() (*cli.App, config.AppContext) {
 			&cli.StringFlag{
 				Name:    "manifest",
 				Aliases: []string{"m"},
-				Usage:   "path to manifest manifest file",
+				Usage:   "path to the manifest file",
 				Value:   "",
 			},
 			&cli.StringFlag{
