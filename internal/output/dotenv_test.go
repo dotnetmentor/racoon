@@ -130,5 +130,26 @@ var _ = Describe("Dotenv", func() {
 				Expect(result).To(ContainSubstring("Dotnet__Structured__FormattedProperty="))
 			})
 		})
+
+		When("writing prefixed output", func() {
+			var result string
+
+			BeforeEach(func() {
+				_, stdout, _ := pio.Buffered(os.Stdin)
+				o := output.NewDotenv()
+				o.Prefix = "PREFIX_"
+				o.Write(stdout, keys, map[string]string{}, values)
+				b, _ := io.ReadAll(stdout)
+				result = string(b)
+			})
+
+			It("sorts the output", func() {
+				Expect(result).To(ContainSubstring("PREFIX_FOO="))
+				Expect(result).To(ContainSubstring("PREFIX_BAR="))
+				Expect(result).To(ContainSubstring("PREFIX_CAMEL_CASED_PROPERTY="))
+				Expect(result).To(ContainSubstring("PREFIX_PATH_BASED_PROPERTY="))
+				Expect(result).To(ContainSubstring("PREFIX_DOTNET_STRUCTURED_FORMATTED_PROPERTY="))
+			})
+		})
 	})
 })

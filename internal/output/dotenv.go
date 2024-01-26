@@ -12,6 +12,7 @@ import (
 type Dotenv struct {
 	Sort          bool   `yaml:"sort"`
 	Quote         bool   `yaml:"quote"`
+	Prefix        string `yaml:"prefix"`
 	Uppercase     bool   `yaml:"uppercase"`
 	WordSeparator string `yaml:"wordSeparator"`
 	PathSeparator string `yaml:"pathSeparator"`
@@ -44,6 +45,7 @@ func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, value
 				Uppercase:     o.Uppercase,
 				WordSeparator: o.WordSeparator,
 				PathSeparator: o.PathSeparator,
+				Prefix:        o.Prefix,
 			})
 		}
 
@@ -52,6 +54,7 @@ func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, value
 		if o.Quote {
 			format = "%s=\"%s\"\n"
 		}
+
 		output[key] = fmt.Sprintf(format, key, value)
 		outputKeys[i] = key
 	}

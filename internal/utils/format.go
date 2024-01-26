@@ -9,9 +9,11 @@ type Formatting struct {
 	PathSeparator string
 	Uppercase     bool
 	Lowercase     bool
+	Prefix        string
 }
 
 func FormatKey(s string, f Formatting) string {
+	prefix := len(f.Prefix) > 0
 	fs := ""
 	parts := SplitPath(s)
 	for i, path := range parts {
@@ -30,6 +32,9 @@ func FormatKey(s string, f Formatting) string {
 		if i+1 < len(parts) {
 			fs += f.PathSeparator
 		}
+	}
+	if prefix {
+		fs = f.Prefix + fs
 	}
 	return fs
 }
