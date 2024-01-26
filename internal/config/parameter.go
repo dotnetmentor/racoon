@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/dotnetmentor/racoon/internal/utils"
 )
 
 type parameters map[string]string
@@ -40,9 +42,15 @@ func (p parameters) ValidateParams(pl ParameterConfigList) error {
 		}
 	}
 
+	reserved := []string{"name", "key"}
+
 	// validate parameters
 	for _, pc := range pl {
 		pv, ok := p[pc.Key]
+
+		if utils.StringSliceContains(reserved, pc.Key) {
+			return fmt.Errorf("parameter key \"%s\" is reserved and cannot be used", pc.Key)
+		}
 
 		if pc.Required {
 			if !ok {
@@ -79,7 +87,7 @@ func (p parameters) Ordered(pl ParameterConfigList) (ordered OrderedParameterLis
 	return ordered
 }
 
-func (op OrderedParameterList) Replace(s string) string {
+func (op OrderedParameterList) replace(s string) string {
 	for _, p := range op {
 		s = strings.ReplaceAll(s, fmt.Sprintf("{%s}", p.Key), p.Value)
 	}

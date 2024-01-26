@@ -78,7 +78,7 @@ func Export(metadata config.AppMetadata) *cli.Command {
 				return err
 			}
 
-			encconf := api.NewEncryptedConfig(m, ctx.Parameters, backend)
+			encconf := api.NewEncryptedConfig(ctx, backend)
 
 			visit := visitor.New(ctx)
 
@@ -173,7 +173,7 @@ func Export(metadata config.AppMetadata) *cli.Command {
 						continue
 					}
 
-					path = ctx.Parameters.Replace(path)
+					path = ctx.Replace(path)
 
 					filtered := []string{}
 					filteredValues := make(map[string]string)

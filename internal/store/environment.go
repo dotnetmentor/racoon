@@ -22,7 +22,7 @@ type Environment struct {
 
 func (s *Environment) Read(ctx config.AppContext, layer api.Layer, key string, sensitive bool, propertySource config.ValueFromEvnironment, sourceConfig config.EnvConfig) api.Value {
 	for _, dff := range sourceConfig.Dotfiles {
-		df := ctx.Parameters.Replace(dff)
+		df := ctx.Replace(dff)
 		if utils.StringSliceContains(s.dotfilesLoaded, df) {
 			continue
 		}

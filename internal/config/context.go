@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"strings"
 
 	"github.com/dotnetmentor/racoon/internal/environment"
 	"github.com/sirupsen/logrus"
@@ -26,6 +27,13 @@ type AppMetadata struct {
 	Version string
 	Commit  string
 	Date    string
+}
+
+func (c AppContext) Replace(format string) string {
+	fv := format
+	fv = strings.ReplaceAll(fv, "{name}", c.Manifest.Name)
+	fv = c.Parameters.replace(fv)
+	return fv
 }
 
 func NewContext(metadata AppMetadata, paths ...string) (AppContext, error) {

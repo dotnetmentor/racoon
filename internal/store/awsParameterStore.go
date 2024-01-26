@@ -39,7 +39,7 @@ func (s *AwsParameterStore) Read(ctx config.AppContext, layer api.Layer, key str
 		return api.NewValue(api.NewValueSource(layer, api.SourceTypeAwsParameterStore), "", "", missingKeyError(), sensitive || sourceConfig.ForceSensitive)
 	}
 
-	psk := awpParameterStoreKey(ctx.Parameters.Replace(pskf), key)
+	psk := awpParameterStoreKey(ctx.Replace(pskf), key)
 	ctx.Log.Debugf("reading %s from %s", psk, config.SourceTypeAwsParameterStore)
 	out, err := s.client.GetParameter(ctx.Context, &ssm.GetParameterInput{
 		Name:           &psk,
@@ -101,7 +101,7 @@ func (s *AwsParameterStore) Write(ctx config.AppContext, key, value, description
 	})
 
 	for k, v := range ctx.Manifest.Labels {
-		fv := ctx.Parameters.Replace(v)
+		fv := ctx.Replace(v)
 		tags = append(tags, ssmtypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(fv),

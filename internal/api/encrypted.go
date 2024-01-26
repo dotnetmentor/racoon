@@ -24,17 +24,17 @@ type EncryptedProperty struct {
 	Value       *string `json:"value" yaml:"value"`
 }
 
-func NewEncryptedConfig(m config.Manifest, p config.OrderedParameterList, backend backend.Backend) *EncryptedConfig {
+func NewEncryptedConfig(ctx config.AppContext, backend backend.Backend) *EncryptedConfig {
 	ec := EncryptedConfig{
 		backend:    backend,
-		parameters: p,
+		parameters: ctx.Parameters,
 
-		Name:       m.Name,
+		Name:       ctx.Manifest.Name,
 		Labels:     make(map[string]string),
 		Properties: make([]EncryptedProperty, 0),
 	}
-	for k, v := range m.Labels {
-		ec.Labels[k] = p.Replace(v)
+	for k, v := range ctx.Manifest.Labels {
+		ec.Labels[k] = ctx.Replace(v)
 	}
 	return &ec
 }
