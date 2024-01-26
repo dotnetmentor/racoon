@@ -31,7 +31,7 @@ type AppMetadata struct {
 func NewContext(metadata AppMetadata, paths ...string) (AppContext, error) {
 	l := logrus.New()
 	l.Formatter = &PrefixedTextFormatter{
-		Prefix: "racoon ",
+		Prefix: "[racoon] ",
 	}
 
 	if len(paths) == 0 {

@@ -9,7 +9,11 @@ type PrefixedTextFormatter struct {
 
 // Format formats the log entry
 func (f *PrefixedTextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	formatter := &logrus.TextFormatter{}
+	formatter := &logrus.TextFormatter{
+		DisableTimestamp:       true,
+		PadLevelText:           false,
+		DisableLevelTruncation: true,
+	}
 	b, err := formatter.Format(entry)
 	if err == nil {
 		if len(b) > 0 {
