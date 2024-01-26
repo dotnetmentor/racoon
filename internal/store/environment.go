@@ -30,6 +30,8 @@ func (s *Environment) Read(ctx config.AppContext, layer api.Layer, key string, s
 		if err := godotenv.Overload(df); err != nil {
 			if os.IsNotExist(err) {
 				ctx.Log.Warnf("dotenv file %s was not found", df)
+				s.dotfilesLoaded = append(s.dotfilesLoaded, df)
+				continue
 			} else {
 				return api.NewValue(api.NewValueSource(layer, api.SourceTypeEnvironment), "", "", err, sensitive)
 			}

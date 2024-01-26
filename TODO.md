@@ -50,11 +50,10 @@
 - [x] Fix: Read command must match argument to a single property, no property match
 - [x] Fix: write command needs log message when no properties have a writable source
 - [x] Fix: Remove support for optional properties, define them in lower layer instead??? should be an error
+- [x] Fix: Bad logging (racoon WARN[0000] dotenv file local.env was not found ... racoon DEBU[0000] dotenv file local.env loaded)
 
 - [ ] (in-progress) Initial round of real world testing
 
-- [ ] Fix: Bad logging (racoon WARN[0000] dotenv file local.env was not found ... racoon DEBU[0000] dotenv file local.env loaded)
-- [ ] Fix: Should sort apply to the remapped keys? In other words, do we sort after remapping?
 - [ ] Feature: Allow prefix for dotenv output (could be used to do "export FOO=bar" or "MYSVC_FOO=bar")
 - [ ] Feature: Allow {name} to be replaced with the manifest name (make sure we support this everywhere)
 - [ ] Feature: Add output type "combine", that combines aliased outputs
