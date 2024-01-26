@@ -160,10 +160,13 @@ func Write(metadata config.AppMetadata) *cli.Command {
 				return err
 			}
 
+			propertyMatch := false
+			propertyWritable := false
 			if err = visit.Property(func(p api.Property, err error) (bool, error) {
 				if err != nil {
 					return false, err
 				}
+				propertyMatch = true
 
 				val := p.Value()
 
@@ -193,6 +196,9 @@ func Write(metadata config.AppMetadata) *cli.Command {
 						value:        v,
 						selectPrompt: v.SourceAndKey(),
 					})
+				}
+				if !propertyWritable && len(wSources) > 0 {
+					propertyWritable = true
 				}
 
 				wFormatters := make([]writable, 0)
@@ -277,6 +283,19 @@ func Write(metadata config.AppMetadata) *cli.Command {
 				return true, nil
 			}); err != nil {
 				return err
+			}
+
+			if !propertyMatch {
+				nArgs := len(includes)
+				if nArgs == 1 {
+					ctx.Log.Warnf("property %s not found", includes[0])
+				} else if nArgs > 0 {
+					ctx.Log.Warnf("no matching properties found")
+				} else {
+					ctx.Log.Warnf("no properties found")
+				}
+			} else if !propertyWritable {
+				ctx.Log.Infof("no writable properties found")
 			}
 
 			return nil

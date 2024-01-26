@@ -40,10 +40,13 @@ func Read(metadata config.AppMetadata) *cli.Command {
 			}
 
 			var value api.Value
+			propertyMatch := false
 			err = visit.Property(func(p api.Property, err error) (bool, error) {
 				if err != nil {
 					return false, err
 				}
+
+				propertyMatch = true
 
 				val := p.Value()
 				if err := p.Validate(val); err != nil {
@@ -77,6 +80,10 @@ func Read(metadata config.AppMetadata) *cli.Command {
 
 			if value != nil {
 				fmt.Printf("%s", value.Raw())
+			}
+
+			if !propertyMatch {
+				ctx.Log.Warnf("property %s not found", key)
 			}
 
 			return nil
