@@ -23,7 +23,7 @@ func Read(metadata config.AppMetadata) *cli.Command {
 		},
 		Action: func(c *cli.Context) error {
 			if c.Args().Len() != 1 {
-				return fmt.Errorf("key not specified, must be provided as a single argument")
+				return fmt.Errorf("property name not specified, must be provided as a single argument")
 			}
 			key := strings.TrimSpace(c.Args().First())
 
