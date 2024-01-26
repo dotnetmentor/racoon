@@ -319,7 +319,6 @@ type RuleConfig struct {
 }
 
 type ValidationRuleConfig struct {
-	Optional   bool `yaml:"optional"`
 	AllowEmpty bool `yaml:"allowEmpty"`
 }
 

@@ -236,7 +236,6 @@ var _ = Describe("Properties", func() {
 					false,
 					config.RuleConfig{
 						Validation: config.ValidationRuleConfig{
-							Optional:   true,
 							AllowEmpty: true,
 						},
 					},
@@ -246,7 +245,7 @@ var _ = Describe("Properties", func() {
 
 			It("returns error for nil value", func() {
 				err := property.Validate(nil)
-				Expect(err).To(Not(HaveOccurred()))
+				Expect(err).To(HaveOccurred())
 			})
 
 			It("returns error for random error", func() {
@@ -258,14 +257,14 @@ var _ = Describe("Properties", func() {
 				Expect(err.Error()).To(ContainSubstring("ValidationError, value resolved with error"))
 			})
 
-			It("returns no error for not found value", func() {
+			It("returns error for not found value", func() {
 				nfe := api.NewNotFoundError(fmt.Errorf("not relevant"), "key", source)
 				val := api.NewValue(api.NewValueSource(layer, source), "key", "", nfe, false)
 				err := property.Validate(val)
-				Expect(err).To(Not(HaveOccurred()))
+				Expect(err).To(HaveOccurred())
 			})
 
-			It("returns error for empty value", func() {
+			It("returns no error for empty value", func() {
 				val := api.NewValue(api.NewValueSource(layer, source), "key", "", nil, false)
 				err := property.Validate(val)
 				Expect(err).To(Not(HaveOccurred()))

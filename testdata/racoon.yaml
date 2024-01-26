@@ -56,12 +56,6 @@ properties:
       validation:
         allowEmpty: true
 
-  - name: OptionalProperty
-    description: This property will only be exported if set by a layer
-    rules:
-      validation:
-        optional: true
-
 layers:
   - name: shared-environment-config
     match:
