@@ -40,6 +40,9 @@ func (vs *Visitor) Init(excludes, includes []string) error {
 	implicit = explicit.Merge(implicit)
 	vs.layers = append(vs.layers, base)
 
+	if len(vs.context.Manifest.Config.Parameters) > 0 {
+		vs.context.Log.Infof("matching layers with parameters (%s)", vs.context.Parameters.String())
+	}
 	ls, err := vs.context.Manifest.GetLayers(vs.context)
 	if err != nil {
 		return err

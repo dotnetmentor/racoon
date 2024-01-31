@@ -102,3 +102,14 @@ func (op OrderedParameterList) Value(key string) (string, bool) {
 	}
 	return "", false
 }
+
+func (op OrderedParameterList) String() string {
+	kv := make([]string, len(op))
+	for i, p := range op {
+		kv[i] = fmt.Sprintf("%s=%s", p.Key, p.Value)
+	}
+	if len(kv) > 0 {
+		return strings.Join(kv, ", ")
+	}
+	return ""
+}

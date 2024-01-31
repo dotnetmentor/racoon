@@ -53,6 +53,7 @@
 - [x] Fix: Bad logging (racoon WARN[0000] dotenv file local.env was not found ... racoon DEBU[0000] dotenv file local.env loaded)
 - [x] Feature: Allow prefix for dotenv output (could be used to do "export FOO=bar" or "MYSVC_FOO=bar")
 - [x] Feature: Allow {name} to be replaced with the manifest name
+- [x] Feature: Added logging of provided parameters during matching
 
 - [ ] (in-progress) Initial round of real world testing
 
