@@ -1,4 +1,4 @@
-# racoon - config and secrets are my thing
+# racoon - layered config management
 
 ## Commands
 
@@ -72,9 +72,9 @@ outputs:
 
 - [x] Exporting of secrets to multiple outputs (dotenv, tfvars)
 - [x] Seeding of secrets not already in the store
-- [ ] Release pipeline
 - [x] Export outputs to stdout (no logging allowed)
 - [x] Command for reading a single secrets value
+- [ ] Release pipeline
 - [ ] Tagging of external resources
 - [x] Context support (dev / production / cicd / localdev etc)
 - [x] Key format for Parameter Store
