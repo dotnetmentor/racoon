@@ -82,7 +82,10 @@
 
 ## Next
 
+## Pre-release
+
 - [ ] What's the tagline for the project, update readme, repository and cli help
+- [ ] Write a guide for contributing to the project
 
 ## Proposals
 

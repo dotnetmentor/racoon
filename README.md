@@ -71,10 +71,3 @@ outputs:
 ## Roadmap
 
 [Check out the roadmap](https://github.com/orgs/dotnetmentor/projects/1)
-
-## Development
-
-```sh
-go get
-go run . -- <args>
-```
