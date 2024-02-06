@@ -70,41 +70,7 @@ outputs:
 
 ## Roadmap
 
-- [x] Exporting of secrets to multiple outputs (dotenv, tfvars)
-- [x] Seeding of secrets not already in the store
-- [x] Export outputs to stdout (no logging allowed)
-- [x] Command for reading a single secrets value
-- [ ] Release pipeline
-- [ ] Tagging of external resources
-- [x] Context support (dev / production / cicd / localdev etc)
-- [x] Key format for Parameter Store
-- [x] Remapping support for outputs (PaymetApiKey -> Payment\_\_ApiKey)
-- [ ] Generators for providing generated values when seeding a secret
-- [ ] Listing secrets in a given context
-- [ ] Deleting a secret from the store
-- [x] Json output format
-- [ ] Shell (bash/zsh/sh) output format
-- [ ] Certificate output format
-- [ ] Kubernetes secret output format
-- [ ] Kubernetes configmap output format
-- [ ] Naming conventions for outputs
-- [ ] Command for local cleanup of generated files
-- [ ] Store provider for AWS Secrets Manager : Secrets
-- [ ] Store provider for Azure Key Vault : Secrets
-- [x] Flag for specifying other filenames for racoon.y\*ml
-- [ ] Readonly secrets (used for consuming secret managed by external system)
-- [ ] Move command for moving secrets in the store
-- [ ] Init command for creating the manifest file
-- [x] Cleaner handling of errors (less panic, more logging and exit codes)
-- [x] Ability to select secrets for export using flags (racoon export --include||--exclude Secret1)
-- [x] Ability to select secrets for export using output config (include:[] exclude:[])
-- [ ] Conditional sync for faster exports (export based on hash sum for context)
-- [ ] Dump command for creating a local cache that is used until cache is no longer available (no calls to the store when cache is available)
-- [x] Configuration of outputs (example: dotenv without doublequotes)
-- [x] Update description on existing secrets
-- [ ] Validate command or a --validate flag for the create command
-- [ ] Command for finding secret manifests recursively and display a graph on secrets usage
-- [ ] Value from command (command: cmd: "uuidgen --context={Context} --other={Overlay}" format: "{Value}"))
+[Check out the roadmap](https://github.com/orgs/dotnetmentor/projects/1)
 
 ## Development
 
