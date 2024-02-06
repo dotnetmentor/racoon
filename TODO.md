@@ -84,15 +84,19 @@
 
 ## Pre-release
 
+- [ ] Test conventional commit and goreleasers changelog feature
+- [ ] Enforce conventional commit
 - [ ] What's the tagline for the project, update readme, repository and cli help
+- [ ] Project logo
+- [ ] More and better tests on multiple levels and components (e2e, unit etc)
+- [ ] Documentation, lot's of it
+- [ ] Writa a getting started guide
 - [ ] Write a guide for contributing to the project
 
 ## Proposals
 
 NOTE! These have yet to make it onto the project board
 
-- [ ] Update the readme and move remaining todo's to roadmap
-- [ ] More and better tests on multiple levels and components (e2e, unit etc)
 - [ ] Feature: Basic support for Int, String and Boolean values
 - [ ] Feature: Validation options, Value type (Int, String, Bool etc)
 - [ ] Feature: Validation options, Value match Regexp (.\*)
