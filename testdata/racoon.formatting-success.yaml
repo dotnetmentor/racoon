@@ -1,0 +1,44 @@
+name: formatting-success
+
+config:
+  parameters:
+    - key: context
+      required: true
+
+properties:
+  - name: BaseProperty
+    description: Description of BaseProperty
+    default: "default value"
+
+layers:
+  - name: local-overrides
+    match:
+      - context = local
+    properties:
+      - name: PropertyFormattingFirstTime
+        description: ID of the printer server
+        default: "{id}"
+        format:
+          - replace: id
+            optional: true
+            source: { literal: "is the charm" }
+          - replace: id
+            optional: true
+            source: { literal: "IS NOT THE CHARM" }
+
+      - name: PropertyFormattingFallback
+        description: ID of the printer server
+        default: "{id}"
+        format:
+          - replace: id
+            optional: true
+            source: { env: { key: NOT_FOUND_ANYWHERE } }
+          - replace: id
+            optional: false
+            source: { env: { key: FALLBACK_VALUE } }
+
+outputs:
+  - type: dotenv
+    paths: ["-"]
+    config:
+      quote: false

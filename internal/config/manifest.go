@@ -37,6 +37,9 @@ var (
 			AllowImplicit: true,
 			AllowExplicit: true,
 		},
+		Formatting: FormattingRuleConfig{
+			Must: []MustFormatConfig{},
+		},
 	}
 )
 
@@ -311,11 +314,13 @@ type FormattingConfig struct {
 	Replace       *string            `yaml:"replace,omitempty"`
 	RegexpReplace *string            `yaml:"regexpReplace,omitempty"`
 	Source        *ValueSourceConfig `yaml:"source,omitempty"`
+	Optional      *bool              `yaml:"optional,omitempty"`
 }
 
 type RuleConfig struct {
 	Validation ValidationRuleConfig `yaml:"validation"`
 	Override   OverrideRuleConfig   `yaml:"override"`
+	Formatting FormattingRuleConfig `yaml:"formatting"`
 }
 
 type ValidationRuleConfig struct {
@@ -325,6 +330,14 @@ type ValidationRuleConfig struct {
 type OverrideRuleConfig struct {
 	AllowImplicit bool `yaml:"allowImplicit"`
 	AllowExplicit bool `yaml:"allowExplicit"`
+}
+
+type FormattingRuleConfig struct {
+	Must []MustFormatConfig `yaml:"must,omitempty"`
+}
+
+type MustFormatConfig struct {
+	Replace *string `yaml:"replace,omitempty"`
 }
 
 type ValueSourceConfig struct {

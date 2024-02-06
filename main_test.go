@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/andreyvit/diff"
@@ -11,25 +12,29 @@ import (
 )
 
 var cases = []struct {
-	name       string
-	manifest   string
-	parameters []string
-	output     string
+	name                string
+	manifest            string
+	parameters          []string
+	output              string
+	expectedErrorPrefix string
 }{
-	{"context_local", "racoon.yaml", []string{"context=local"}, "dotenv"},
-	{"context_dev", "racoon.yaml", []string{"context=dev"}, "dotenv"},
-	{"context_prod", "racoon.yaml", []string{"context=prod"}, "dotenv"},
-	{"context_local_tenant_demo1", "racoon.yaml", []string{"context=local", "tenant=demo1"}, "dotenv"},
-	{"context_dev_tenant_demo1", "racoon.yaml", []string{"context=dev", "tenant=demo1"}, "dotenv"},
-	{"context_prod_tenant_customer1", "racoon.yaml", []string{"context=prod", "tenant=customer1"}, "dotenv"},
+	{"context_local", "racoon.yaml", []string{"context=local"}, "dotenv", ""},
+	{"context_dev", "racoon.yaml", []string{"context=dev"}, "dotenv", ""},
+	{"context_prod", "racoon.yaml", []string{"context=prod"}, "dotenv", ""},
+	{"context_local_tenant_demo1", "racoon.yaml", []string{"context=local", "tenant=demo1"}, "dotenv", ""},
+	{"context_dev_tenant_demo1", "racoon.yaml", []string{"context=dev", "tenant=demo1"}, "dotenv", ""},
+	{"context_prod_tenant_customer1", "racoon.yaml", []string{"context=prod", "tenant=customer1"}, "dotenv", ""},
+	{"formatting_success", "racoon.formatting-success.yaml", []string{"context=local"}, "dotenv", ""},
+	{"formatting_failure", "racoon.formatting-failure.yaml", []string{"context=local"}, "dotenv", "ValidationError, value resolved with error for property PropertyFormattingWithoutFallback, FormattingError, {id} must be replaced during formatting"},
 }
 
 func TestExportCommand(t *testing.T) {
 	cleanupTestOutput()
 
-	app, _ := createApp()
-	for _, tt := range cases {
-		t.Run(tt.manifest, func(t *testing.T) {
+	for _, tcase := range cases {
+		app, _ := createApp()
+		tt := tcase
+		t.Run(tcase.manifest, func(t *testing.T) {
 			resetEnvFile := "./testdata/reset.env"
 			godotenv.Overload(resetEnvFile)
 			envFile := fmt.Sprintf("./testdata/%s.env", tt.name)
@@ -49,7 +54,9 @@ func TestExportCommand(t *testing.T) {
 
 			err := app.Run(args)
 			if err != nil {
-				t.Error(err)
+				if tt.expectedErrorPrefix == "" || !strings.HasPrefix(err.Error(), tt.expectedErrorPrefix) {
+					t.Error(err)
+				}
 			}
 
 			expected, _ := os.ReadFile(expectedFile)

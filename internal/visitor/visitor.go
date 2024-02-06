@@ -6,6 +6,7 @@ import (
 	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/store"
+	"github.com/dotnetmentor/racoon/internal/utils"
 )
 
 func New(ctx config.AppContext) *Visitor {
@@ -162,6 +163,7 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 
 			str := val.Raw()
 			errs := make([]*api.FormattingError, 0)
+			replaced := make([]string, 0)
 			forceSensitive := prop.Sensitive()
 
 			for _, fc := range prop.Formatting() {
@@ -170,10 +172,14 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 
 				fval := vs.store.Read(*layer, k, prop.Sensitive(), fc.Source, layer.Config)
 				if fval != nil {
+					optional := fc.Optional != nil && *fc.Optional
+
 					if fval.Error() != nil {
-						msg := fmt.Sprintf("failed to read %s value from %s, used to format %s, err: %v", k, fval.Source(), prop.String(), fval.Error())
+						msg := fmt.Sprintf("failed to read formatter value for %s (formatter=%s source=%s optional=%v), err: %v", p.Name, f.String(), fval.Source(), optional, fval.Error())
 						vs.context.Log.Debugln(msg)
-						errs = append(errs, api.NewFormattingError(msg))
+						if !optional {
+							errs = append(errs, api.NewFormattingError(msg))
+						}
 						continue
 					}
 
@@ -191,11 +197,19 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 						continue
 					}
 
+					replaced = append(replaced, k)
 					str = res
 				} else {
-					vs.context.Log.Debugf("failed to read %s value, used to format %s, err: no value received", k, prop.String())
-					errs = append(errs, api.NewFormattingError(fmt.Sprintf("failed to read %s value, used to format %s, err: no value received", k, prop.String())))
+					msg := fmt.Sprintf("failed to read formatter value (%s), err: %v", f.String(), fval.Error())
+					vs.context.Log.Debug(msg)
+					errs = append(errs, api.NewFormattingError(msg))
 					continue
+				}
+			}
+
+			for _, must := range p.Rules.Formatting.Must {
+				if !utils.StringSliceContains(replaced, *must.Replace) {
+					errs = append(errs, api.NewFormattingError(fmt.Sprintf("{%s} must be replaced during formatting", *must.Replace)))
 				}
 			}
 

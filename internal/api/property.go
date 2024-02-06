@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"reflect"
 
 	"github.com/dotnetmentor/racoon/internal/config"
 )
@@ -33,7 +34,7 @@ func NewProperty(properties PropertyList, name, description, source string, sens
 			}
 			property.Description = ep.Description
 
-			if property.rules != config.DefaultPropertyRules && property.rules != ep.rules {
+			if !reflect.DeepEqual(property.rules, config.DefaultPropertyRules) && !reflect.DeepEqual(property.rules, ep.rules) {
 				apiLog.Warnf("%s/%s, overriding rules is not allowed, rules already defined in %s", property.source, property.Name, ep.source)
 			}
 			property.rules = ep.rules
@@ -135,7 +136,7 @@ func (p Property) Validate(v Value) error {
 	}
 
 	if v.Error() != nil {
-		return NewValidationError(fmt.Sprintf("value resolved with error for property %s, %v", v.Error(), p.Name), v)
+		return NewValidationError(fmt.Sprintf("value resolved with error for property %s, %v", p.Name, v.Error()), v)
 	}
 
 	if len(v.Raw()) == 0 && !p.Rules().Validation.AllowEmpty {

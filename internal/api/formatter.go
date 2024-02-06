@@ -62,6 +62,10 @@ func (f *ReplaceFormatter) String() string {
 
 func (f *ReplaceFormatter) Apply(format string, val Value) (string, error) {
 	rkey := fmt.Sprintf("{%s}", f.key)
+	if !strings.Contains(format, rkey) {
+		f.log.Debugf("skipping replace of %s, nothing to replace...", rkey)
+		return format, nil
+	}
 	f.log.Debugf("replacing %s with value: %s", rkey, val.String())
 	return strings.ReplaceAll(format, rkey, val.Raw()), nil
 }
