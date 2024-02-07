@@ -62,9 +62,10 @@ func createApp() (*cli.App, config.AppContext) {
 		fmt.Printf("%s %s\ncommit = %s\ndate = %s\n", c.App.Name, c.App.Version, metadata.Commit, metadata.Date)
 	}
 	app := &cli.App{
-		Name:    "racoon",
-		Usage:   "configuration and secrets management",
-		Version: metadata.Version,
+		Name:            "racoon",
+		Usage:           "configuration and secrets management",
+		Version:         metadata.Version,
+		HideHelpCommand: true,
 		CommandNotFound: func(c *cli.Context, s string) {
 			ctx.Log.Warnf("unknown command %s", s)
 			c.App.Metadata[metadataExitCode] = 127
@@ -117,5 +118,8 @@ func createApp() (*cli.App, config.AppContext) {
 %s
 `, logo, url, cli.AppHelpTemplate)
 
+	for _, c := range app.Commands {
+		c.HideHelpCommand = true
+	}
 	return app, ctx
 }
