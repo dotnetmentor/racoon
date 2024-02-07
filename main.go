@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/arsham/figurine/figurine"
 	"github.com/dotnetmentor/racoon/internal/command"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/sirupsen/logrus"
@@ -102,24 +105,34 @@ func createApp() (*cli.App, config.AppContext) {
 		},
 	}
 
-	logo := `
- ______     ______     ______     ______     ______     __   __
-/\  == \   /\  __ \   /\  ___\   /\  __ \   /\  __ \   /\ "-.\ \
-\ \  __<   \ \  __ \  \ \ \____  \ \ \/\ \  \ \ \/\ \  \ \ \-.  \
- \ \_\ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\\"\_\
-  \/_/ /_/   \/_/\/_/   \/_____/   \/_____/   \/_____/   \/_/ \/_/`
+	banner := newBanner("racoon", "https://github.com/dotnetmentor/racoon")
 
-	url := "https://github.com/dotnetmentor/racoon"
-
-	app.CustomAppHelpTemplate = fmt.Sprintf(`
-%s
-%66s
-
-%s
-`, logo, url, cli.AppHelpTemplate)
+	cli.AppHelpTemplate = banner + cli.AppHelpTemplate
+	cli.CommandHelpTemplate = banner + cli.CommandHelpTemplate
+	cli.SubcommandHelpTemplate = banner + cli.SubcommandHelpTemplate
 
 	for _, c := range app.Commands {
 		c.HideHelpCommand = true
 	}
+
 	return app, ctx
+}
+
+func newBanner(text, url string) string {
+	term := os.Getenv("TERM")
+	nocolor := os.Getenv("NO_COLOR")
+	if nocolor == "true" || term == "" || term == "dumb" {
+		return fmt.Sprintf("\n%s - %s\n\n", strings.ToUpper(text), url)
+	}
+
+	logo := rainbow(text)
+	return fmt.Sprintf("\n%s\n%66s\n\n", logo, url)
+}
+
+func rainbow(s string) string {
+	var buf bytes.Buffer
+	if err := figurine.Write(&buf, s, "Sub-Zero.flf"); err != nil {
+		return err.Error()
+	}
+	return buf.String()
 }
