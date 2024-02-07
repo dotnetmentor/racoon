@@ -100,5 +100,22 @@ func createApp() (*cli.App, config.AppContext) {
 			return nil
 		},
 	}
+
+	logo := `
+ ______     ______     ______     ______     ______     __   __
+/\  == \   /\  __ \   /\  ___\   /\  __ \   /\  __ \   /\ "-.\ \
+\ \  __<   \ \  __ \  \ \ \____  \ \ \/\ \  \ \ \/\ \  \ \ \-.  \
+ \ \_\ \_\  \ \_\ \_\  \ \_____\  \ \_____\  \ \_____\  \ \_\\"\_\
+  \/_/ /_/   \/_/\/_/   \/_____/   \/_____/   \/_____/   \/_/ \/_/`
+
+	url := "https://github.com/dotnetmentor/racoon"
+
+	app.CustomAppHelpTemplate = fmt.Sprintf(`
+%s
+%66s
+
+%s
+`, logo, url, cli.AppHelpTemplate)
+
 	return app, ctx
 }
