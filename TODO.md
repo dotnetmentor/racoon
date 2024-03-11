@@ -87,10 +87,10 @@
 - [ ] Test conventional commit and goreleasers changelog feature
 - [ ] Enforce conventional commit
 - [ ] What's the tagline for the project, update readme, repository and cli help
-- [ ] Project logo
+- [ ] Project branding
 - [ ] More and better tests on multiple levels and components (e2e, unit etc)
 - [ ] Documentation, lot's of it
-- [ ] Writa a getting started guide
+- [ ] Write a getting started guide
 - [ ] Write a guide for contributing to the project
 
 ## Proposals
@@ -101,6 +101,7 @@ NOTE! These have yet to make it onto the project board
 - [ ] Feature: Validation options, Value type (Int, String, Bool etc)
 - [ ] Feature: Validation options, Value match Regexp (.\*)
 - [ ] Feature: Validation options, String values - MinLength: 3, MaxLength: 16 etc
+- [ ] Feature: Auditing: Track who, what and when (enables "last accessed" reviews for sources)
 - [ ] Feature: Allow layers to be defined in separate files
 - [ ] Feature: Use config.sources as a way to enable the use of a source (if not specified, then it's not enabled)?
 - [ ] Feature: Add output type "merge", that combines aliased outputs

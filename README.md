@@ -1,8 +1,10 @@
-# racoon - layered config management
+# racoon
+
+Layered Configuration as Code
 
 ## Commands
 
-See `racoon help` or ` racoon --help` for all available commands
+See `racoon --help` for all available commands
 
 ## Sources
 
