@@ -320,7 +320,7 @@ export default {
 </script>
 
 <template>
-  <section>
+  <article class="userinput">
     <h3>Configurations</h3>
 
     <hgroup>
@@ -365,7 +365,9 @@ export default {
         </button>
       </div>
     </div>
+  </article>
 
+  <div>
     <div v-if="activeFilters.length && pages.length" v-for="page in pages">
       <div class="config-grid grid">
         <article v-for="c, index in page">
@@ -383,6 +385,8 @@ export default {
                     <kbd>{{ k }} = {{ v }}</kbd>
                   </span>
                 </template>
+              </div>
+              <div class="tags">
                 <span v-for="v, k in c.labels" class="label">
                   <kbd>{{ k }} = {{ v }}</kbd>
                 </span>
@@ -450,5 +454,5 @@ export default {
       </article>
     </dialog>
 
-  </section>
+  </div>
 </template>

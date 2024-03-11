@@ -1,65 +1,126 @@
-/* Pink Dark scheme (Auto) */
 /* Automatically enabled if user has Dark mode enabled */
 @media only screen and (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --primary: #e98db0;
-    --primary-hover: #d58de9;
-    --primary-focus: #4e3555;
-    --primary-inverse: #FFF;
-    --background-color: #11111f;
+    --racoon-darkest: #02151A;
+    --racoon-darker: #02252E;
+    --racoon-dark: #021E25;
+    --racoon-mid-dark: #012b36;
+    --racoon-mid-light: #839496;
+    --racoon-light: #909FA0;
+    --racoon-lighter: #9aa8a9;
+    --racoon-lighthest: #a3b0b1;
+    --racoon-highlight-brand: #ff2e87;
+    --racoon-highlight-primary: #00aefe;
+    --racoon-highlight-secondary: #af3aff;
+
+    --color: var(--racoon-light);
+    --primary:  var(--racoon-light);
+    --primary-hover: var(--racoon-highlight-primary);
+    --primary-focus: var(--racoon-dark);
+    --secondary: var(--racoon-mid-light);
+    --background-color: var(--racoon-dark);
+    --card-sectionning-background-color: var(--racoon-darker);
+    --card-background-color: var(--racoon-mid-dark);
+    --card-border-color: var(--racoon-dark);
+    --table-border-color: var(--racoon-dark);
   }
 }
 
-/* Pink Dark scheme (Forced) */
 /* Enabled if forced with data-theme="dark" */
 [data-theme="dark"] {
-  --primary: #e98db0;
-  --primary-hover: #d58de9;
-  --primary-focus: #4e3555;
-  --primary-inverse: #FFF;
-  --background-color: #11111f;
+  --racoon-darkest: #02151A;
+  --racoon-darker: #02252E;
+  --racoon-dark: #021E25;
+  --racoon-mid-dark: #012b36;
+  --racoon-mid-light: #839496;
+  --racoon-light: #909FA0;
+  --racoon-lighter: #9aa8a9;
+  --racoon-lighthest: #a3b0b1;
+  --racoon-highlight-brand: #ff2e87;
+  --racoon-highlight-primary: #00aefe;
+  --racoon-highlight-secondary: #af3aff;
+
+  --color: var(--racoon-light);
+  --primary:  var(--racoon-light);
+  --primary-hover: var(--racoon-highlight-primary);
+  --primary-focus: var(--racoon-dark);
+  --secondary: var(--racoon-mid-light);
+  --background-color: var(--racoon-dark);
+  --card-sectionning-background-color: var(--racoon-darker);
+  --card-background-color: var(--racoon-mid-dark);
+  --card-border-color: var(--racoon-dark);
+  --table-border-color: var(--racoon-dark);
 }
 
-/* Pink (Common styles) */
 :root {
   --font-size: 16px;
   --form-element-active-border-color: var(--primary);
   --form-element-focus-color: var(--primary-focus);
   --switch-color: var(--primary-inverse);
   --switch-checked-background-color: var(--primary);
+  --block-spacing-vertical: 2rem;
 }
 
 nav a {
   font-weight: bold;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
-}
-
 #app {
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0;
   font-weight: normal;
+  display: flex;
 }
 
-header {
+aside {
+  flex: 1;
+  width: 240px;
+  background-color: var(--racoon-darkest);
+  min-height: 100vh;
+  position: fixed;
+}
+aside h1 {
+  text-align: center;
+  margin-bottom: 0;
+  border-bottom: solid 1px var(--racoon-mid-dark);
+  background-color: var(--racoon-highlight-brand);
+  color: var(--racoon-darkest);
+  padding: 2rem 3rem;
+}
+aside h1 .ov-icon {
+  margin-bottom: -.5rem;
+}
+aside nav {
+  padding: 1rem 2rem;
+}
+aside nav .ov-icon {
+  vertical-align: -.3rem;
+  margin-right: .3rem;
+}
+aside .footer {
+  text-align: center;
+  position: fixed;
+  bottom: 1rem;
+  width: 176px;
+}
+
+main {
+  margin-left: 240px !important;
+  padding: 2rem !important;
+}
+
+main article {
+  margin-top: 1rem;
   margin-bottom: 1rem;
 }
-header h1 {
-  margin-bottom: 0;
-  color: #28284a;
-}
-header h1 .ov-icon {
-  vertical-align: -1rem;
-  margin-left: -1.5rem;
-}
-header nav {
-  border-bottom: 1px solid #28284a;
+
+main article.userinput {
+  padding: calc(var(--block-spacing-vertical) * .5) var(--block-spacing-horizontal);
 }
 
+table thead th {
+  border-width: 1px;
+}
 table tbody th,
 table tbody td {
   vertical-align: baseline;
@@ -79,22 +140,27 @@ mark {
   line-height: 2rem;
 }
 .tags .label kbd {
-  background-color: #918de9;
+  background-color: var(--racoon-dark);
+  color: var(--primary);
   margin-right: .4rem;
 }
 .tags .filter kbd {
   cursor: pointer;
-  background-color: var(--primary);
+  background-color: var(--secondary);
+  color: var(--primary-inverse);
   margin-right: .4rem;
 }
 .tags .filter kbd:hover {
   background-color: var(--primary-hover);
+  color: var(--primary-inverse);
 }
 .tags .filter.search kbd {
-  background-color: var(--primary-focus);
+  background-color: var(--primary-hover);
+  color: var(--racoon-darkest);
 }
 .tags .filter.active kbd {
   background-color: var(--primary-hover);
+  color: var(--primary-inverse);
 }
 
 .decrypt {
@@ -111,11 +177,7 @@ dialog article {
 }
 
 .config-grid article {
-  margin-bottom: 1rem;
   padding: calc(var(--block-spacing-vertical) * .5) var(--block-spacing-horizontal)
-}
-.config-grid article>header {
-  margin-bottom: calc(var(--block-spacing-vertical) * .5);
 }
 
 article header hgroup {
@@ -126,4 +188,5 @@ article header .tags kbd {
 }
 article header .tags .filter kbd {
   background-color: var(--primary-hover);
+  cursor: default;
 }

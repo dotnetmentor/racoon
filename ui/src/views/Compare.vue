@@ -99,7 +99,7 @@ export default {
 </script>
 
 <template>
-  <section>
+  <article class="userinput">
     <h3>Compare</h3>
 
     <div class="grid">
@@ -146,13 +146,14 @@ export default {
     <div class="grid">
       <div>
         <label><br />
-          <button :disabled="loading" :aria-busy="loading" @click="() => compare()">Compare now</button>
+          <button class="secondary" :disabled="loading" :aria-busy="loading" @click="() => compare()">Compare
+            now</button>
         </label>
       </div>
     </div>
-  </section>
+  </article>
 
-  <section v-if="!loading">
+  <article v-if="!loading">
     <div class="grid">
       <div>
         <h3>Diff</h3>
@@ -167,9 +168,9 @@ export default {
     <div class="grid">
       <Diff :mode="mode" theme="light" language="html" :prev="results.left.result" :current="results.right.result" />
     </div>
-  </section>
+  </article>
 
-  <section v-if="!loading">
+  <article v-if="!loading">
     <div class="grid">
       <div>
         <h4>Logs</h4>
@@ -178,5 +179,5 @@ export default {
     <div class="grid">
       <Diff mode="split" theme="light" language="html" :prev="results.left.logs" :current="results.right.logs" />
     </div>
-  </section>
+  </article>
 </template>
