@@ -116,7 +116,7 @@ func (vs *Visitor) loadProperties(layer *api.Layer, implicit, explicit config.Pr
 					}
 				case config.SourceTypeEnvironment:
 					valueSource = &config.ValueSourceConfig{
-						Environment: &config.ValueFromEvnironment{},
+						Environment: &config.ValueFromEnvironment{},
 					}
 				default:
 					vs.context.Log.Warnf("unsupported implicit source %s", s)

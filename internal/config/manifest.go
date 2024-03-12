@@ -343,7 +343,7 @@ type MustFormatConfig struct {
 type ValueSourceConfig struct {
 	Parameter         *string                     `yaml:"parameter,omitempty"`
 	Literal           *string                     `yaml:"literal,omitempty"`
-	Environment       *ValueFromEvnironment       `yaml:"env,omitempty"`
+	Environment       *ValueFromEnvironment       `yaml:"env,omitempty"`
 	AwsParameterStore *ValueFromAwsParameterStore `yaml:"awsParameterStore,omitempty"`
 }
 
@@ -368,7 +368,7 @@ func (s *ValueSourceConfig) SourceType() SourceType {
 	return SourceTypeNotSet
 }
 
-type ValueFromEvnironment struct {
+type ValueFromEnvironment struct {
 	Key string `yaml:"key"`
 }
 

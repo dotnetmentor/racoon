@@ -20,7 +20,7 @@ type Environment struct {
 	dotfilesLoaded []string
 }
 
-func (s *Environment) Read(ctx config.AppContext, layer api.Layer, key string, sensitive bool, propertySource config.ValueFromEvnironment, sourceConfig config.EnvConfig) api.Value {
+func (s *Environment) Read(ctx config.AppContext, layer api.Layer, key string, sensitive bool, propertySource config.ValueFromEnvironment, sourceConfig config.EnvConfig) api.Value {
 	for _, dff := range sourceConfig.Dotfiles {
 		df := ctx.Replace(dff)
 		if utils.StringSliceContains(s.dotfilesLoaded, df) {
