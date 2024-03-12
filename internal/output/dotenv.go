@@ -3,37 +3,67 @@ package output
 import (
 	"fmt"
 	"io"
+	"sort"
 	"strings"
+
+	"github.com/dotnetmentor/racoon/internal/utils"
 )
 
 type Dotenv struct {
-	Quote bool `yaml:"quote"`
+	Sort          bool   `yaml:"sort"`
+	Quote         bool   `yaml:"quote"`
+	Prefix        string `yaml:"prefix"`
+	Uppercase     bool   `yaml:"uppercase"`
+	WordSeparator string `yaml:"wordSeparator"`
+	PathSeparator string `yaml:"pathSeparator"`
+}
+
+func NewDotenv() Dotenv {
+	return Dotenv{
+		Sort:          false,
+		Quote:         true,
+		Uppercase:     true,
+		WordSeparator: "_",
+		PathSeparator: "_",
+	}
 }
 
 func (o Dotenv) Type() string {
 	return "dotenv"
 }
 
-func NewDotenv() Dotenv {
-	return Dotenv{
-		Quote: true,
-	}
-}
+func (o Dotenv) Write(w io.Writer, keys []string, remap map[string]string, values map[string]string) {
+	output := make(map[string]string)
+	outputKeys := make([]string, len(keys))
 
-func (o Dotenv) Write(w io.Writer, secrets []string, remap map[string]string, values map[string]string) {
-	for _, s := range secrets {
+	for i, k := range keys {
 		var key string
-		if remapped, ok := remap[s]; ok && remapped != "" {
+		if remapped, ok := remap[k]; ok && remapped != "" {
 			key = remapped
 		} else {
-			key = CamelCaseSplitToUpperJoinByUnderscore(s)
+			key = utils.FormatKey(k, utils.Formatting{
+				Uppercase:     o.Uppercase,
+				WordSeparator: o.WordSeparator,
+				PathSeparator: o.PathSeparator,
+				Prefix:        o.Prefix,
+			})
 		}
 
-		value := strings.TrimSuffix(values[s], "\n")
+		value := strings.TrimSuffix(values[k], "\n")
 		format := "%s=%s\n"
 		if o.Quote {
 			format = "%s=\"%s\"\n"
 		}
-		w.Write([]byte(fmt.Sprintf(format, key, value)))
+
+		output[key] = fmt.Sprintf(format, key, value)
+		outputKeys[i] = key
+	}
+
+	if o.Sort {
+		sort.Strings(outputKeys)
+	}
+
+	for _, k := range outputKeys {
+		w.Write([]byte(output[k]))
 	}
 }

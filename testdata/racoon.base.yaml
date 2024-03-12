@@ -1,0 +1,28 @@
+backend:
+  enabled: true
+  store:
+    awsS3:
+      bucket: racoon-remote-state
+  encryption:
+    awsKms:
+      kmsKey: alias/parameter_store_key
+
+config:
+  parameters:
+    - key: context
+      required: true
+    - key: user
+      required: false
+    - key: tenant
+      required: false
+  sources:
+    awsParameterStore:
+      kmsKey: alias/parameter_store_key
+      defaultKey: "/racoon/{context}/{key}"
+
+layers:
+  - name: base-config
+    properties:
+      - name: AspnetcoreConfig
+        source:
+          literal: development

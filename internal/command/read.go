@@ -1,72 +1,92 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-
-	"github.com/dotnetmentor/racoon/internal/aws"
+	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
-
+	"github.com/dotnetmentor/racoon/internal/visitor"
 	"github.com/urfave/cli/v2"
 )
 
-func Read(ctx config.AppContext) *cli.Command {
-	m := ctx.Manifest
-
+func Read(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "read",
-		Usage: "reads a single secret value from it's store",
-		Flags: []cli.Flag{},
+		Usage: "Reads the value of a single property",
+		Flags: []cli.Flag{
+			&cli.StringSliceFlag{
+				Name:    "parameter",
+				Aliases: []string{"p"},
+				Usage:   "sets layer parameters",
+			},
+		},
 		Action: func(c *cli.Context) error {
-			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
+			if c.Args().Len() != 1 {
+				return fmt.Errorf("property name not specified, must be provided as a single argument")
+			}
+			key := strings.TrimSpace(c.Args().First())
+
+			ctx, err := newContext(c, metadata, true)
 			if err != nil {
 				return err
 			}
 
-			context := c.String("context")
-			name := strings.ToLower(strings.TrimSpace(c.Args().First()))
+			visit := visitor.New(ctx)
 
-			// read from store
-			for _, s := range m.Secrets {
-				if strings.ToLower(s.Name) != name {
-					continue
+			err = visit.Init([]string{}, []string{key})
+			if err != nil {
+				return err
+			}
+
+			var value api.Value
+			propertyMatch := false
+			err = visit.Property(func(p api.Property, err error) (bool, error) {
+				if err != nil {
+					return false, err
 				}
 
-				value := ""
-				if s.Default != nil {
-					ctx.Log.Infof("reading %s from %s", s.Name, "default")
-					value = *s.Default
+				propertyMatch = true
+
+				val := p.Value()
+				if err := p.Validate(val); err != nil {
+					return false, err
 				}
 
-				if s.ValueFrom != nil {
-					if s.ValueFrom.AwsParameterStore != nil {
-						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
-						ctx.Log.Debugf("reading %s from %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
-						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
-							Name:           &key,
-							WithDecryption: true,
-						})
-						if err != nil {
-							var notFound *ssmtypes.ParameterNotFound
-							if !errors.As(err, &notFound) || s.Default == nil {
-								return err
-							}
-							ctx.Log.Infof("%s not found in %s, using default value ( key=%s default=%s )", s.Name, config.StoreTypeAwsParameterStore, key, *s.Default)
-						} else {
-							value = *out.Parameter.Value
-						}
+				// If validation passes but the value is nil, continue
+				if val == nil {
+					return true, nil
+				}
+
+				// If validation passes but we have a not found error for the resolved value, skip read
+				if !api.IsNotFoundError(val.Error()) {
+					value = val
+				}
+
+				ctx.Log.Debugf("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+				for _, v := range p.Values() {
+					if err := p.Validate(v); err != nil {
+						ctx.Log.Debugf("- value from %s is invalid, err: %v", v.Source(), err)
+					} else {
+						ctx.Log.Debugf("- value from %s, value: %s", v.Source(), v.String())
 					}
 				}
 
-				fmt.Printf("%s", value)
-				return nil
+				return true, nil
+			})
+			if err != nil {
+				return err
 			}
 
-			return fmt.Errorf("secret matching name %s was not found", name)
+			if value != nil {
+				fmt.Printf("%s", value.Raw())
+			}
+
+			if !propertyMatch {
+				ctx.Log.Warnf("property %s not found", key)
+			}
+
+			return nil
 		},
 	}
 }

@@ -2,166 +2,249 @@ package command
 
 import (
 	"bufio"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	ssmtypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
-
-	"github.com/dotnetmentor/racoon/internal/aws"
+	"github.com/dotnetmentor/racoon/internal/api"
 	"github.com/dotnetmentor/racoon/internal/config"
 	"github.com/dotnetmentor/racoon/internal/output"
 	"github.com/dotnetmentor/racoon/internal/utils"
+	"github.com/dotnetmentor/racoon/internal/visitor"
 
 	"github.com/urfave/cli/v2"
 )
 
-func Export(ctx config.AppContext) *cli.Command {
-	m := ctx.Manifest
-
+func Export(metadata config.AppMetadata) *cli.Command {
 	return &cli.Command{
 		Name:  "export",
-		Usage: "export secrets using outputs defined in the manifest file",
+		Usage: "Exports the values of multiple properties",
 		Flags: []cli.Flag{
+			&cli.StringSliceFlag{
+				Name:    "parameter",
+				Aliases: []string{"p"},
+				Usage:   "sets layer parameters",
+			},
 			&cli.StringFlag{
 				Name:    "output",
 				Aliases: []string{"o"},
-				Usage:   "export a single output",
+				Usage:   "export using output",
+			},
+			&cli.StringFlag{
+				Name:    "alias",
+				Aliases: []string{"a"},
+				Usage:   "export using output matching alias",
 			},
 			&cli.StringFlag{
 				Name:    "path",
-				Aliases: []string{"p"},
-				Usage:   "export a single output to the specified path",
+				Aliases: []string{}, // 'p' not possible as alias
+				Usage:   "export output to the specified path",
 			},
 			&cli.StringSliceFlag{
 				Name:    "include",
 				Aliases: []string{"i"},
-				Usage:   "include secret in export",
+				Usage:   "include property in export",
 			},
 			&cli.StringSliceFlag{
 				Name:    "exclude",
 				Aliases: []string{"e"},
-				Usage:   "exclude secret from export",
+				Usage:   "exclude property from export",
 			},
 		},
 		Action: func(c *cli.Context) error {
+			ctx, err := newContext(c, metadata, true)
+			if err != nil {
+				return err
+			}
+			m := ctx.Manifest
+
 			ot := c.String("output")
+			oa := c.String("alias")
 			p := c.String("path")
+
+			excludes := c.StringSlice("exclude")
+			includes := c.StringSlice("include")
+
 			if ot == "" && p != "" {
 				ctx.Log.Warn("the flag --path is not allowed without also specifying the --output flag")
 				return nil
 			}
 
-			awsParameterStore, err := aws.NewParameterStoreClient(c.Context)
+			keys := []string{}
+			values := map[string]api.Value{}
+
+			backend, err := newBackend(ctx)
 			if err != nil {
 				return err
 			}
 
-			includes := c.StringSlice("include")
-			excludes := c.StringSlice("exclude")
-			context := c.String("context")
+			encconf := api.NewEncryptedConfig(ctx, backend)
 
-			// read from store
-			secrets := []string{}
-			values := map[string]string{}
-			for _, s := range m.Secrets {
-				if len(excludes) > 0 && utils.StringSliceContains(excludes, s.Name) {
-					continue
-				}
-				if len(includes) > 0 && !utils.StringSliceContains(includes, s.Name) {
-					continue
-				}
+			visit := visitor.New(ctx)
 
-				secrets = append(secrets, s.Name)
+			err = visit.Init(excludes, includes)
+			if err != nil {
+				return err
+			}
 
-				if s.Default != nil {
-					ctx.Log.Infof("reading %s from %s", s.Name, "default")
-					values[s.Name] = *s.Default
+			err = visit.Property(func(p api.Property, err error) (bool, error) {
+				if err != nil {
+					return false, err
 				}
 
-				if s.ValueFrom != nil {
-					if s.ValueFrom.AwsParameterStore != nil {
-						key := aws.ParameterStoreKey(m.Stores.AwsParameterStore, s, context)
-						ctx.Log.Infof("reading %s from %s ( key=%s )", s.Name, config.StoreTypeAwsParameterStore, key)
-						out, err := awsParameterStore.GetParameter(c.Context, &ssm.GetParameterInput{
-							Name:           &key,
-							WithDecryption: true,
-						})
-						if err != nil {
-							var notFound *ssmtypes.ParameterNotFound
-							if !errors.As(err, &notFound) || s.Default == nil {
-								return err
-							}
-							ctx.Log.Infof("%s not found in %s, using default value ( key=%s default=%s )", s.Name, config.StoreTypeAwsParameterStore, key, *s.Default)
-						} else {
-							values[s.Name] = *out.Parameter.Value
-						}
+				if err := encconf.Track(p); err != nil {
+					return false, err
+				}
+
+				key := p.Name
+
+				if !utils.StringSliceContains(keys, key) {
+					keys = append(keys, key)
+				}
+
+				val := p.Value()
+				if err := p.Validate(val); err != nil {
+					return false, err
+				}
+
+				// If validation passes but the value is nil, continue
+				if val == nil {
+					return true, nil
+				}
+
+				// If validation passes but we have a not found error for the resolved value, skip export
+				if !api.IsNotFoundError(val.Error()) {
+					values[key] = val
+				}
+
+				ctx.Log.Infof("property %s, defined in %s, value from %s, value set to: %s", p.Name, p.Source(), val.Source(), val.String())
+				for _, v := range p.Values() {
+					if err := p.Validate(v); err != nil {
+						ctx.Log.Debugf("- value from %s is invalid, err: %v", v.Source(), err)
+					} else {
+						ctx.Log.Debugf("- value from %s, value: %s", v.Source(), v.String())
 					}
+				}
+
+				return true, nil
+			})
+			if err != nil {
+				return err
+			}
+
+			// track encrypted config
+			if backend != nil {
+				jb, err := json.Marshal(&encconf)
+				if err != nil {
+					return err
+				}
+
+				if err := backend.Store().Upload(encconf.Path(), jb); err != nil {
+					return err
 				}
 			}
 
-			// create outputs
+			// output
 			outputMatched := false
 			for _, o := range m.Outputs {
 				if ot != "" && string(o.Type) != ot {
 					continue
 				}
 
-				outputMatched = true
-
-				path := o.Path
-				if p != "" {
-					path = p
-				}
-
-				if ot == "" && path == "-" {
-					ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s", o.Type)
+				if oa != "" && o.Alias != oa {
+					oid := string(o.Type)
+					if len(o.Alias) > 0 {
+						oid = fmt.Sprintf("%s/%s", oid, o.Alias)
+					}
+					ctx.Log.Debugf("skipping %s output, did not match the alias %s", oid, oa)
 					continue
 				}
 
-				filtered := []string{}
-				for _, s := range secrets {
-					if len(o.Exclude) > 0 && utils.StringSliceContains(o.Exclude, s) {
-						continue
-					}
-					if len(o.Include) > 0 && !utils.StringSliceContains(o.Include, s) {
-						continue
-					}
-					filtered = append(filtered, s)
+				outputMatched = true
+
+				paths := o.Paths
+				if p != "" {
+					paths = []string{p}
 				}
 
-				file := os.Stdout
-				if path != "" && path != "-" {
-					if file, err = os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644); err != nil {
-						return fmt.Errorf("failed to open file for writing, %v", err)
+				for _, path := range paths {
+					if ot == "" && path == "-" {
+						ctx.Log.Infof("writing to stdout is only allowed when using the --output flag, skipping output %s (alias=%s path=%s)", o.Type, o.Alias, path)
+						continue
 					}
-					defer file.Close()
-					defer file.Sync()
-				}
-				w := bufio.NewWriter(file)
-				defer w.Flush()
 
-				switch out := config.AsOutput(o).(type) {
-				case output.Dotenv:
-					ctx.Log.Infof("exporting secrets as dotenv ( path=%s quote=%v )", path, out.Quote)
-					out.Write(w, filtered, o.Map, values)
-					break
-				case output.Tfvars:
-					ctx.Log.Infof("exporting secrets as tfvars ( path=%s )", path)
-					out.Write(w, filtered, o.Map, values)
-					break
-				case output.Json:
-					ctx.Log.Infof("exporting secrets as json ( path=%s )", path)
-					out.Write(w, filtered, o.Map, values)
-					break
-				default:
-					return fmt.Errorf("unsupported output type %s", o.Type)
+					path = ctx.Replace(path)
+
+					filtered := []string{}
+					filteredValues := make(map[string]string)
+					for _, s := range keys {
+						if len(o.Exclude) > 0 && utils.StringSliceContains(o.Exclude, s) {
+							continue
+						}
+						if len(o.Include) > 0 && !utils.StringSliceContains(o.Include, s) {
+							continue
+						}
+
+						v, ok := values[s]
+						if !ok {
+							continue
+						}
+
+						switch o.Export {
+						case config.ExportTypeClearText:
+							switch v.(type) {
+							case *api.SensitiveValue:
+								continue
+							}
+						case config.ExportTypeSensitive:
+							switch v.(type) {
+							case *api.ClearTextValue:
+								continue
+							}
+						}
+
+						filtered = append(filtered, s)
+						filteredValues[s] = v.Raw()
+					}
+
+					err := func() error {
+						out := os.Stdout
+						if path != "" && path != "-" {
+							file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+							if err != nil {
+								return fmt.Errorf("failed to open file for writing, %v", err)
+							}
+							defer file.Close()
+							defer file.Sync()
+							out = file
+						}
+						w := bufio.NewWriter(out)
+						defer w.Flush()
+
+						switch out := config.AsOutput(o).(type) {
+						case output.Dotenv:
+							ctx.Log.Infof("exporting values as dotenv (alias=%s path=%s quote=%v)", o.Alias, path, out.Quote)
+							out.Write(w, filtered, o.Map, filteredValues)
+						case output.Tfvars:
+							ctx.Log.Infof("exporting values as tfvars (alias=%s path=%s)", o.Alias, path)
+							out.Write(w, filtered, o.Map, filteredValues)
+						case output.Json:
+							ctx.Log.Infof("exporting values as json (alias=%s path=%s)", o.Alias, path)
+							out.Write(w, filtered, o.Map, filteredValues)
+						default:
+							return fmt.Errorf("unsupported output type %s", o.Type)
+						}
+
+						return nil
+					}()
+					if err != nil {
+						return err
+					}
 				}
 			}
 
 			if ot != "" && !outputMatched {
-				return fmt.Errorf("unknown output type %s", ot)
+				return fmt.Errorf("unknown output (type=%s alias=%s)", ot, oa)
 			}
 
 			return nil

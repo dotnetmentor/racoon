@@ -1,32 +1,75 @@
 package config
 
 import (
+	"context"
+	"strings"
+
+	"github.com/dotnetmentor/racoon/internal/environment"
 	"github.com/sirupsen/logrus"
 )
 
 var (
 	DefaultManifestYamlFiles []string = []string{
-		"./secrets.yaml",
-		"./secrets.yml",
+		"./racoon.yaml",
+		"./racoon.yml",
 	}
 )
 
 type AppContext struct {
-	Log      *logrus.Logger
-	Manifest Manifest
+	Context    context.Context
+	Log        *logrus.Logger
+	Metadata   AppMetadata
+	Manifest   Manifest
+	Parameters OrderedParameterList
 }
 
-func NewContext() (AppContext, error) {
+type AppMetadata struct {
+	Version string
+	Commit  string
+	Date    string
+}
+
+func (c AppContext) Replace(format string) string {
+	fv := format
+	fv = strings.ReplaceAll(fv, "{name}", c.Manifest.Name)
+	fv = c.Parameters.replace(fv)
+	return fv
+}
+
+func NewContext(metadata AppMetadata, paths ...string) (AppContext, error) {
 	l := logrus.New()
 	l.Formatter = &PrefixedTextFormatter{
-		Prefix: "racoon ",
+		Prefix: "[racoon] ",
 	}
 
-	m, err := NewManifest(DefaultManifestYamlFiles)
+	if len(paths) == 0 {
+		return AppContext{
+			Log: l,
+		}, nil
+	}
+
+	m, err := NewManifest(paths)
 	c := AppContext{
 		Log:      l,
+		Metadata: metadata,
 		Manifest: m,
 	}
+	if err != nil {
+		return c, err
+	}
 
-	return c, err
+	backendEnabled, err := environment.BoolVar("RACOON_BACKEND_ENABLED", m.Backend.Enabled)
+	if err != nil {
+		return c, err
+	}
+
+	if backendEnabled != m.Backend.Enabled {
+		if backendEnabled {
+			c.Log.Warn("enabled backend, RACOON_BACKEND_ENABLED environment variable set to true")
+		} else {
+			c.Log.Warn("disabled backend, RACOON_BACKEND_ENABLED environment variable set to false")
+		}
+	}
+
+	return c, nil
 }

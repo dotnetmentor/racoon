@@ -1,0 +1,130 @@
+extends: ./racoon.base.yaml
+
+name: racoon-e2e-tests
+
+labels:
+  Environment: "{context}"
+  ManagedBy: racoon
+  CostAllocationGroup: Security
+
+properties:
+  - name: AspnetcoreConfig
+    description: appsettings.*.json used by aspnet core
+
+  - name: AspnetcoreEnvironment
+    description: Context to run the app under (local/dev/prod)
+    default: local
+
+  - name: Tenant
+    description: Tenant (short url-friendly tenant name)
+    default: "default"
+    source:
+      parameter: tenant
+
+  - name: SendgridApiKey
+    description: Sendgrid Api Key
+    sensitive: true
+    default: ""
+    rules:
+      validation:
+        allowEmpty: true
+
+  - name: PdfUrl
+    description: URL for accessing PDF service
+    default: http://pdf.local.domain.net/api
+
+  - name: WebhookBaseUrl
+    description: Serves as the base URL for all webhooks
+    default: ""
+    rules:
+      validation:
+        allowEmpty: true
+
+  - name: Github.ApiKey
+    description: Github API key
+    sensitive: true
+    default: ""
+    rules:
+      validation:
+        allowEmpty: true
+
+  - name: Github.ClientId
+    description: Github Client ID
+    sensitive: true
+    default: ""
+    rules:
+      validation:
+        allowEmpty: true
+
+layers:
+  - name: shared-environment-config
+    match:
+      - context =~ ^(dev|prod)$ # dev or prod
+    properties:
+      - name: AspnetcoreConfig
+        source:
+          literal: live
+      - name: PdfUrl
+        source:
+          literal: https://pdf.{context}.domain.net/api
+        format:
+          - replace: context
+            source:
+              parameter: context
+
+  - name: development-config
+    match:
+      - context = dev
+    properties:
+      - name: AspnetcoreEnvironment
+        source:
+          literal: dev
+
+  - name: production-config
+    match:
+      - context = prod
+    properties:
+      - name: AspnetcoreEnvironment
+        source:
+          literal: prod
+      - name: SendgridApiKey
+        source:
+          awsParameterStore: {}
+      - name: Github.ApiKey
+        source:
+          awsParameterStore:
+            key: "/racoon/{context}/shared/{key}"
+      - name: Github.ClientId
+        source:
+          awsParameterStore:
+            key: "/racoon/{context}/shared/{key}"
+
+  - name: tenant-config
+    match:
+      - context =~ ^(dev|prod)$ # dev or prod
+      - tenant =~ ^.{3,}$
+    properties:
+      - name: PdfUrl
+        source:
+          literal: https://pdf.{tenant}.{context}.domain.net/api
+        format:
+          - replace: context
+            source:
+              parameter: context
+          - replace: tenant
+            source:
+              parameter: tenant
+      - name: SendgridApiKey
+        source:
+          awsParameterStore:
+            key: "/racoon/{context}/{tenant}/{key}"
+
+outputs:
+  - type: dotenv
+    paths: ["-"]
+    config:
+      quote: false
+      # wordSeparator: ""
+      # pathSeparator: "__"
+      # uppercase: false
+      # lowercase: false

@@ -1,0 +1,8 @@
+ASPNETCORE_CONFIG=live
+ASPNETCORE_ENVIRONMENT=prod
+TENANT=default
+SENDGRID_API_KEY=apikey-secret-value
+PDF_URL=https://pdf.prod.domain.net/api
+WEBHOOK_BASE_URL=
+GITHUB_API_KEY=github-apikey-secret-value
+GITHUB_CLIENT_ID=github-clientid-secret-value

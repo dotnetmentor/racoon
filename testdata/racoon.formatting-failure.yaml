@@ -1,0 +1,36 @@
+name: formatting-failure
+
+config:
+  parameters:
+    - key: context
+      required: true
+
+properties:
+  - name: BaseProperty
+    description: Description of BaseProperty
+    default: "default value"
+
+layers:
+  - name: local-overrides
+    match:
+      - context = local
+    properties:
+      - name: PropertyFormattingWithoutFallback
+        default: "{id}"
+        rules:
+          formatting:
+            must:
+              - replace: id
+        format:
+          - replace: id
+            optional: true
+            source: { env: { key: NOT_FOUND_ANYWHERE } }
+          - replace: id
+            optional: true
+            source: { env: { key: ALSO_NOT_FOUND_ANYWHERE } }
+
+outputs:
+  - type: dotenv
+    paths: ["-"]
+    config:
+      quote: false

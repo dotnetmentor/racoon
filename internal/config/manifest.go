@@ -2,95 +2,436 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	"github.com/dotnetmentor/racoon/internal/backend"
 	"github.com/dotnetmentor/racoon/internal/output"
+	"github.com/dotnetmentor/racoon/internal/utils"
+
 	yaml2 "gopkg.in/yaml.v2"
 )
 
 const (
+	SourceTypeNotSet            SourceType = "unknown"
+	SourceTypeAwsParameterStore SourceType = "awsParameterStore"
+	SourceTypeEnvironment       SourceType = "env"
+	SourceTypeLiteral           SourceType = "literal"
+	SourceTypeParameter         SourceType = "parameter"
+
 	OutputTypeDotenv OutputType = "dotenv"
 	OutputTypeTfvars OutputType = "tfvars"
 	OutputTypeJson   OutputType = "json"
 
-	StoreTypeAwsParameterStore string = "awsParameterStore"
+	ExportTypeAll       ExportType = "all"
+	ExportTypeSensitive ExportType = "sensitive"
+	ExportTypeClearText ExportType = "cleartext"
 )
 
+var (
+	DefaultPropertyRules RuleConfig = RuleConfig{
+		Validation: ValidationRuleConfig{
+			AllowEmpty: false,
+		},
+		Override: OverrideRuleConfig{
+			AllowImplicit: true,
+			AllowExplicit: true,
+		},
+		Formatting: FormattingRuleConfig{
+			Must: []MustFormatConfig{},
+		},
+	}
+)
+
+type SourceType string
+
+type OutputType string
+
+type ExportType string
+
 func NewManifest(paths []string) (Manifest, error) {
+	// base path
+	basepath, _ := os.Getwd()
+
+	// read manifest
+	m, err := readManifest(basepath, paths)
+	if err != nil {
+		return m, err
+	}
+
+	// TODO: Validate manifest config
+	if len(m.Name) == 0 {
+		return m, fmt.Errorf("name is required")
+	}
+
+	layers := make(map[string]interface{})
+	for _, l := range m.Layers {
+		if _, ok := layers[l.Name]; ok {
+			return m, fmt.Errorf("duplicate layer, %s defined multiple times", l.Name)
+		}
+		layers[l.Name] = nil
+	}
+
+	return m, nil
+}
+
+func readManifest(basepath string, paths []string) (Manifest, error) {
 	// read manifest file
 	var file []byte
-	for _, filename := range paths {
-		mp, _ := filepath.Abs(filename)
+	var path string
 
-		if _, err := os.Stat(mp); os.IsNotExist(err) {
+	for _, filename := range paths {
+		var fullpath string
+		if filepath.IsAbs(filename) {
+			fullpath = filename
+		} else {
+			fullpath = filepath.Join(basepath, filename)
+		}
+
+		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
 			continue
 		}
 
-		bs, err := ioutil.ReadFile(mp)
+		bs, err := os.ReadFile(fullpath)
 		if err != nil {
-			return Manifest{}, fmt.Errorf("failed to read manifest file (path=%s). %v", mp, err)
+			return Manifest{}, fmt.Errorf("failed to read manifest file (path=%s). %v", fullpath, err)
 		}
 		file = bs
+		path = fullpath
+		break
 	}
 
 	if file == nil {
 		return Manifest{}, fmt.Errorf("failed to find manifest file paths=%v", paths)
 	}
 
-	// parse
-	m := Manifest{}
-	err := yaml2.Unmarshal(file, &m)
-	if err != nil {
-		return Manifest{}, fmt.Errorf("failed to parse manifest yaml. %v", err)
+	// parse base config
+	ec := ExtendsConfig{}
+	if err := yaml2.Unmarshal(file, &ec); err != nil {
+		return Manifest{}, fmt.Errorf("failed to parse manifest base yaml (%s), %v", path, err)
 	}
 
-	// TODO: validate manifest config
+	// parse manifest
+	m := Manifest{}
+
+	if len(ec.Extends) > 0 {
+		bm, err := readManifest(filepath.Dir(path), []string{ec.Extends})
+		if err != nil {
+			return Manifest{}, err
+		}
+		m = bm
+	}
+
+	m.filepath = path
+
+	if err := yaml2.UnmarshalStrict(file, &m); err != nil {
+		return Manifest{}, fmt.Errorf("failed to parse manifest yaml (%s), %v", path, err)
+	}
 
 	return m, nil
 }
 
 type Manifest struct {
-	Stores  StoresConfig   `yaml:"stores"`
-	Secrets []SecretConfig `yaml:"secrets"`
-	Outputs []OutputConfig `yaml:"outputs"`
+	filepath       string
+	ExtendsConfig  `yaml:",inline"`
+	MetadataConfig `yaml:",inline"`
+	Backend        backend.BackendConfig `yaml:"backend,omitempty"`
+	Config         Config                `yaml:"config,omitempty"`
+	Layers         LayerList             `yaml:"layers,omitempty"`
+	Properties     PropertyList          `yaml:"properties,omitempty"`
+	Outputs        OutputList            `yaml:"outputs,omitempty"`
 }
 
-type StoresConfig struct {
-	AwsParameterStore AwsParameterStoreConfig `yaml:"awsParameterStore,omitempty"`
+type ExtendsConfig struct {
+	Extends string `yaml:"extends,omitempty"`
+}
+
+type MetadataConfig struct {
+	Name   string            `yaml:"name"`
+	Labels map[string]string `yaml:"labels,omitempty"`
+}
+
+func (m Manifest) Filepath() string {
+	return m.filepath
+}
+
+type Config struct {
+	Parameters ParameterConfigList `yaml:"parameters,omitempty"`
+	Sources    SourceConfig        `yaml:"sources,omitempty"`
+}
+
+type LayerList []LayerConfig
+
+func (s *LayerList) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawLayerList LayerList
+
+	raw := rawLayerList{}
+
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	ll := LayerList(raw)
+	ll = append(*s, ll...)
+	*s = ll
+
+	return nil
+}
+
+type LayerConfig struct {
+	Name            string       `yaml:"name"`
+	Match           []string     `yaml:"match"`
+	Config          SourceConfig `yaml:"config"`
+	ImplicitSources []SourceType `yaml:"implicitSources"`
+	Properties      PropertyList `yaml:"properties"`
+}
+
+type PropertyList []PropertyConfig
+
+func (l PropertyList) Filter(excludes, includes []string) (properties PropertyList) {
+	for _, p := range l {
+		if len(excludes) > 0 && utils.StringSliceContains(excludes, p.Name) {
+			continue
+		}
+		if len(includes) > 0 && !utils.StringSliceContains(includes, p.Name) {
+			continue
+		}
+		properties = append(properties, p)
+	}
+	return
+}
+
+func (l PropertyList) Merge(pl PropertyList) (properties PropertyList) {
+	properties = append(properties, l...)
+
+	for _, p := range pl {
+		if !utils.SliceContains(l, func(i PropertyConfig) bool {
+			return i.Name == p.Name
+		}) {
+			properties = append(properties, p)
+		}
+	}
+	return
+}
+
+func (l PropertyList) Remove(pl PropertyList) (properties PropertyList) {
+	properties = append(properties, l...)
+
+	return utils.SliceDelete(properties, func(i PropertyConfig) bool {
+		return utils.SliceContains(pl, func(j PropertyConfig) bool {
+			return i.Name == j.Name
+		})
+	})
+}
+
+type ParameterConfigList []ParameterConfig
+
+func (p ParameterConfigList) HasKey(k string) bool {
+	for _, r := range p {
+		if r.Key == k {
+			return true
+		}
+	}
+	return false
+}
+
+type ParameterConfig struct {
+	Key      string `yaml:"key"`
+	Required bool   `yaml:"required"`
+	Regexp   string `yaml:"regexp,omitempty"`
+}
+
+type SourceConfig struct {
+	AwsParameterStore AwsParameterStoreConfig `yaml:"awsParameterStore"`
+	Env               EnvConfig               `yaml:"env"`
 }
 
 type AwsParameterStoreConfig struct {
-	KmsKey           string `yaml:"kmsKey"`
-	DefaultKeyFormat string `yaml:"keyFormat"`
+	DefaultKey           string `yaml:"defaultKey"`
+	KmsKey               string `yaml:"kmsKey"`
+	ForceSensitive       bool   `yaml:"forceSensitive"`
+	TreatNotFoundAsError bool   `yaml:"treatNotFoundAsError"`
 }
 
-type SecretConfig struct {
-	Name        string     `yaml:"name"`
-	Description string     `yaml:"description"`
-	Default     *string    `yaml:"default,omitempty"`
-	ValueFrom   *ValueFrom `yaml:"valueFrom,omitempty"`
+func (c AwsParameterStoreConfig) Merge(config AwsParameterStoreConfig) AwsParameterStoreConfig {
+	nc := AwsParameterStoreConfig{
+		DefaultKey:           c.DefaultKey,
+		ForceSensitive:       c.ForceSensitive,
+		KmsKey:               c.KmsKey,
+		TreatNotFoundAsError: c.TreatNotFoundAsError,
+	}
+
+	if len(config.DefaultKey) > 0 && nc.DefaultKey != config.DefaultKey {
+		nc.DefaultKey = config.DefaultKey
+	}
+
+	if config.ForceSensitive {
+		nc.ForceSensitive = true
+	}
+
+	if len(config.KmsKey) > 0 && nc.KmsKey != config.KmsKey {
+		nc.KmsKey = config.KmsKey
+	}
+
+	if config.TreatNotFoundAsError {
+		nc.TreatNotFoundAsError = true
+	}
+
+	return nc
 }
 
-type ValueFrom struct {
-	AwsParameterStore *ValueFromAwsParameterStoreConfig `yaml:"awsParameterStore,omitempty"`
+type EnvConfig struct {
+	Dotfiles []string `yaml:"dotfiles"`
 }
 
-type ValueFromAwsParameterStoreConfig struct {
+type PropertyConfig struct {
+	Name        string             `yaml:"name"`
+	Description string             `yaml:"description"`
+	Default     *string            `yaml:"default,omitempty"`
+	Sensitive   bool               `yaml:"sensitive,omitempty"`
+	Source      *ValueSourceConfig `yaml:"source,omitempty"`
+	Format      []FormattingConfig `yaml:"format,omitempty"`
+	Rules       RuleConfig         `yaml:"rules,omitempty"`
+}
+
+func (s *PropertyConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	type rawConfig PropertyConfig
+
+	// Change defaults in DefaultPropertyRules
+	raw := rawConfig{
+		Rules: DefaultPropertyRules,
+	}
+
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	*s = PropertyConfig(raw)
+	return nil
+}
+
+type FormattingConfig struct {
+	Replace       *string            `yaml:"replace,omitempty"`
+	RegexpReplace *string            `yaml:"regexpReplace,omitempty"`
+	Source        *ValueSourceConfig `yaml:"source,omitempty"`
+	Optional      *bool              `yaml:"optional,omitempty"`
+}
+
+type RuleConfig struct {
+	Validation ValidationRuleConfig `yaml:"validation"`
+	Override   OverrideRuleConfig   `yaml:"override"`
+	Formatting FormattingRuleConfig `yaml:"formatting"`
+}
+
+type ValidationRuleConfig struct {
+	AllowEmpty bool `yaml:"allowEmpty"`
+}
+
+type OverrideRuleConfig struct {
+	AllowImplicit bool `yaml:"allowImplicit"`
+	AllowExplicit bool `yaml:"allowExplicit"`
+}
+
+type FormattingRuleConfig struct {
+	Must []MustFormatConfig `yaml:"must,omitempty"`
+}
+
+type MustFormatConfig struct {
+	Replace *string `yaml:"replace,omitempty"`
+}
+
+type ValueSourceConfig struct {
+	Parameter         *string                     `yaml:"parameter,omitempty"`
+	Literal           *string                     `yaml:"literal,omitempty"`
+	Environment       *ValueFromEvnironment       `yaml:"env,omitempty"`
+	AwsParameterStore *ValueFromAwsParameterStore `yaml:"awsParameterStore,omitempty"`
+}
+
+func (s *ValueSourceConfig) SourceType() SourceType {
+	if s != nil {
+		if s.Parameter != nil {
+			return SourceTypeParameter
+		}
+
+		if s.Literal != nil {
+			return SourceTypeLiteral
+		}
+
+		if s.Environment != nil {
+			return SourceTypeEnvironment
+		}
+
+		if s.AwsParameterStore != nil {
+			return SourceTypeAwsParameterStore
+		}
+	}
+	return SourceTypeNotSet
+}
+
+type ValueFromEvnironment struct {
 	Key string `yaml:"key"`
 }
 
-type OutputType string
+type ValueFromAwsParameterStore struct {
+	Key                  string `yaml:"key"`
+	TreatNotFoundAsError *bool  `yaml:"treatNotFoundAsError"`
+}
+
+type OutputList []OutputConfig
 
 type OutputConfig struct {
 	Type    OutputType             `yaml:"type,omitempty"`
-	Path    string                 `yaml:"path"`
-	Map     map[string]string      `yaml:"map"`
-	Include []string               `yaml:"include"`
-	Exclude []string               `yaml:"exclude"`
-	Config  map[string]interface{} `yaml:"config"`
+	Alias   string                 `yaml:"alias,omitempty"`
+	Paths   []string               `yaml:"paths,omitempty"`
+	Map     map[string]string      `yaml:"map,omitempty"`
+	Include []string               `yaml:"include,omitempty"`
+	Exclude []string               `yaml:"exclude,omitempty"`
+	Config  map[string]interface{} `yaml:"config,omitempty"`
+	Export  ExportType             `yaml:"export,omitempty"`
 	output  output.Output
+}
+
+func (m *Manifest) GetLayers(ctx AppContext) (layers []LayerConfig, err error) {
+	for _, l := range m.Layers {
+		match, err := l.Matches(ctx.Parameters, ctx)
+		if err != nil {
+			return layers, err
+		}
+		if match {
+			layers = append(layers, l)
+		}
+	}
+	return
+}
+
+func (l *LayerConfig) Matches(op OrderedParameterList, ctx AppContext) (match bool, err error) {
+	match = true
+
+	for _, expr := range l.Match {
+		k, m, e := ParseExpression(expr)
+		if e != nil {
+			match = false
+			err = fmt.Errorf("matching layer %s against parameters failed, %v", l.Name, e)
+			break
+		}
+		if pv, ok := op.Value(k); ok {
+			if !m.Match(pv) {
+				match = false
+				break
+			}
+		} else {
+			match = false
+			break
+		}
+	}
+
+	if match {
+		ctx.Log.Debugf("matched layer %s against parameters (conditions=%v parameters=%v)", l.Name, l.Match, op)
+	} else {
+		ctx.Log.Debugf("layer %s did not match parameters (conditions=%v parameters=%v)", l.Name, l.Match, op)
+	}
+
+	return
 }
 
 func (o *OutputConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
